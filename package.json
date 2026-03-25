@@ -6,7 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite"
-    "homepage": "https:/marisafro.github.io/Hallyuwishlist"
+    "homepage": "https:/marisafro.github.io/Hallyuwishlist/"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
