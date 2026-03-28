@@ -228,7 +228,7 @@ export const getArtistWishes = (): ArtistWish[] => {
     { id: "24", artistName: "I-DLE", votes: 0, genre: "Girl Group" },
     { id: "25", artistName: "TRENDZ", votes: 0, genre: "Boy Group" },
     { id: "26", artistName: "YOUNGJI", votes: 0, genre: "Solo Artist" },
-    { id: "27", artistName: "BBBBBBBBBB", votes: 0, genre: "Solo Artist" },
+    
     
   ];
 };
