@@ -58,6 +58,8 @@ export function EventDetail() {
   const isUpcomingEvent = 'price' in event && 'capacity' in event;
   // Check if it's a past show (has YouTube video)
   const isPastShow = 'type' in event && event.type === 'reality-show';
+  // Check if event date has passed
+  const isPastEvent = new Date(event.date) < new Date();
   
   // Get image URL (for past shows, use YouTube thumbnail)
   const getImageUrl = () => {
@@ -189,8 +191,8 @@ export function EventDetail() {
                 {[
                   { icon: Calendar, title: "Date & Time", content: format(new Date(event.date), "EEEE, MMMM dd, yyyy"), color: "blue" },
                   { icon: MapPin, title: "Location", content: event.venue || event.city, subtext: `${event.city}, Greece`, color: "red" },
-                  { icon: Users, title: "Capacity", content: isUpcomingEvent && 'capacity' in event ? `${event.capacity.toLocaleString()} attendees` : "TBA", subtext: isUpcomingEvent && 'interestedCount' in event ? `${event.interestedCount} people are interested` : "", color: "blue" },
-                ].map((item, index) => (
+                  !isPastEvent && { icon: Users, title: "Capacity", content: isUpcomingEvent && 'capacity' in event ? `${event.capacity.toLocaleString()} attendees` : "TBA", subtext: isUpcomingEvent && 'interestedCount' in event ? `${event.interestedCount} people are interested` : "", color: "blue" },
+                ].filter(Boolean).map((item: any, index) => (
                   <motion.div
                     key={item.title}
                     initial={{ opacity: 0, x: -20 }}
@@ -332,7 +334,7 @@ export function EventDetail() {
                   { label: "Artist", value: event.artist || event.title },
                   event.venue && { label: "Venue", value: event.venue },
                   { label: "City", value: event.city },
-                  isUpcomingEvent && 'capacity' in event && { label: "Capacity", value: event.capacity.toLocaleString() },
+                  !isPastEvent && isUpcomingEvent && 'capacity' in event && { label: "Capacity", value: event.capacity.toLocaleString() },
                 ].filter(Boolean).map((item: any, index) => (
                   <motion.div
                     key={item.label}

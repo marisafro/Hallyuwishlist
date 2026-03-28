@@ -448,8 +448,26 @@ export function KPIDashboard() {
                     data={kpis.genreData}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    labelLine={true}
+                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
+                      const RADIAN = Math.PI / 180;
+                      const radius = outerRadius + 30;
+                      const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                      const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                      
+                      return (
+                        <text
+                          x={x}
+                          y={y}
+                          fill="#374151"
+                          textAnchor={x > cx ? 'start' : 'end'}
+                          dominantBaseline="central"
+                          className="text-sm font-medium"
+                        >
+                          {`${name}: ${(percent * 100).toFixed(0)}%`}
+                        </text>
+                      );
+                    }}
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"

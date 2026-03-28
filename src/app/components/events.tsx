@@ -695,8 +695,7 @@ function PastShowCard({ event, index }: { event: PastShow; index: number }) {
 
             <motion.div
               className="absolute top-4 right-4 bg-gradient-to-r from-blue-600 to-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg flex items-center gap-1"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              
             >
               <History className="size-3" />
               Reality Show

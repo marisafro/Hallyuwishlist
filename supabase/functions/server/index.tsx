@@ -111,7 +111,13 @@ app.post("/make-server-74a49e83/artist-vote", async (c) => {
     // Update votes
     artist.votes = (artist.votes || 0) + 1;
     
-    // Track vote by user ID and age group
+    // Mark user as voted (for frontend detection)
+    if (!artist.votesByUser) {
+      artist.votesByUser = {};
+    }
+    artist.votesByUser[userId] = true;
+    
+    // Track vote by user ID and age group (separate record)
     const voteRecord = {
       artistId,
       userId,
@@ -187,7 +193,13 @@ app.post("/make-server-74a49e83/poll-vote", async (c) => {
 
     option.votes = (option.votes || 0) + 1;
     
-    // Track vote by user ID and age group
+    // Mark user as voted (for frontend detection)
+    if (!option.votesByUser) {
+      option.votesByUser = {};
+    }
+    option.votesByUser[userId] = true;
+    
+    // Track vote by user ID and age group (separate record)
     const voteRecord = {
       pollId,
       optionId,
