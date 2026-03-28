@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router";
 import { Music2, Calendar, Heart, BarChart3, Menu, X, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ScrollToTop } from "./scroll-to-top";
 
@@ -8,6 +8,60 @@ import { ScrollToTop } from "./scroll-to-top";
 export function Root() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Set favicon and meta tags for Google
+  useEffect(() => {
+    // Set page title
+    document.title = "Hallyu Wishlist - K-pop Events in Greece";
+    
+    // Set favicon
+    const setFavicon = (href: string, rel: string = "icon", sizes?: string) => {
+      let link = document.querySelector(`link[rel="${rel}"]${sizes ? `[sizes="${sizes}"]` : ''}`) as HTMLLinkElement;
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = rel;
+        if (sizes) link.sizes = sizes;
+        document.head.appendChild(link);
+      }
+      link.href = href;
+    };
+
+    // Set all favicon variants
+    setFavicon("/favicons/favicon.ico", "icon");
+    setFavicon("/favicons/favicon-16x16.png", "icon", "16x16");
+    setFavicon("/favicons/favicon-32x32.png", "icon", "32x32");
+    setFavicon("/favicons/apple-touch-icon.png", "apple-touch-icon", "180x180");
+    setFavicon("/favicons/android-chrome-192x192.png", "icon", "192x192");
+    setFavicon("/favicons/android-chrome-512x512.png", "icon", "512x512");
+
+    // Set meta tags for Google and SEO
+    const setMetaTag = (name: string, content: string, property?: boolean) => {
+      const attr = property ? "property" : "name";
+      let meta = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement;
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.setAttribute(attr, name);
+        document.head.appendChild(meta);
+      }
+      meta.content = content;
+    };
+
+    setMetaTag("description", "Discover K-pop concerts and events in Greece. Vote for your favorite artists, participate in polls, and join the Hallyu wave!");
+    setMetaTag("keywords", "K-pop, Greece, concerts, events, Hallyu, Korean music, Athens, Thessaloniki");
+    setMetaTag("theme-color", "#1e40af");
+    
+    // Open Graph tags for social media
+    setMetaTag("og:title", "Hallyu Wishlist - K-pop Events in Greece", true);
+    setMetaTag("og:description", "Discover K-pop concerts and events in Greece. Vote for your favorite artists and join the Hallyu wave!", true);
+    setMetaTag("og:type", "website", true);
+    setMetaTag("og:image", "/favicons/android-chrome-512x512.png", true);
+    
+    // Twitter Card tags
+    setMetaTag("twitter:card", "summary_large_image");
+    setMetaTag("twitter:title", "Hallyu Wishlist - K-pop Events in Greece");
+    setMetaTag("twitter:description", "Discover K-pop concerts and events in Greece. Vote for your favorite artists!");
+    setMetaTag("twitter:image", "/favicons/android-chrome-512x512.png");
+  }, []);
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";

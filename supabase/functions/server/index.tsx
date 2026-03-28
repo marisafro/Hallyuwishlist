@@ -357,4 +357,77 @@ app.post("/make-server-74a49e83/initialize", async (c) => {
   }
 });
 
+// Archive and reset monthly data (call this at the start of each month)
+app.post("/make-server-74a49e83/monthly-reset", async (c) => {
+  try {
+    const now = Date.now();
+    const archiveDate = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
+    
+    // Get all current interactions
+    const interactions = await kv.getByPrefix("interaction:");
+    
+    // Archive interactions for the month
+    const archiveKey = `archive:${archiveDate}`;
+    const archiveData = {
+      timestamp: now,
+      date: archiveDate,
+      interactions,
+      totalCount: interactions.length,
+    };
+    await kv.set(archiveKey, archiveData);
+    
+    // Get current state of artists, polls, and events for historical record
+    const artists = await kv.getByPrefix("artist:");
+    const polls = await kv.getByPrefix("poll:");
+    const events = await kv.getByPrefix("event:");
+    
+    // Save monthly snapshot
+    const snapshotKey = `snapshot:${archiveDate}`;
+    const snapshot = {
+      timestamp: now,
+      date: archiveDate,
+      artists,
+      polls,
+      events,
+      totalVotes: artists.reduce((sum, a) => sum + (a.votes || 0), 0),
+      totalInteractions: interactions.length,
+    };
+    await kv.set(snapshotKey, snapshot);
+    
+    // Note: We keep the interaction data for comparison between months
+    // If you want to delete old interactions older than 60 days, uncomment below:
+    // const sixtyDaysAgo = now - (60 * 24 * 60 * 60 * 1000);
+    // const oldInteractions = interactions.filter(i => i.timestamp < sixtyDaysAgo);
+    // for (const interaction of oldInteractions) {
+    //   const keys = await kv.getByPrefix(`interaction:${interaction.timestamp}`);
+    //   for (const key of keys) {
+    //     await kv.del(key);
+    //   }
+    // }
+    
+    return c.json({ 
+      success: true, 
+      message: "Monthly data archived successfully",
+      archive: archiveDate,
+      interactionsArchived: interactions.length,
+    });
+  } catch (error) {
+    console.log(`Error during monthly reset: ${error}`);
+    return c.json({ error: "Failed to archive monthly data" }, 500);
+  }
+});
+
+// Get monthly archives (for historical data viewing)
+app.get("/make-server-74a49e83/archives", async (c) => {
+  try {
+    const archives = await kv.getByPrefix("archive:");
+    const snapshots = await kv.getByPrefix("snapshot:");
+    
+    return c.json({ archives, snapshots });
+  } catch (error) {
+    console.log(`Error fetching archives: ${error}`);
+    return c.json({ error: "Failed to fetch archives" }, 500);
+  }
+});
+
 Deno.serve(app.fetch);

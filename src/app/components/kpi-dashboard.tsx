@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { BarChart3, TrendingUp, Users, Heart, Calendar, MapPin, Download, Sparkles } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Heart, Calendar, MapPin, Download, Sparkles, RefreshCw } from "lucide-react";
 import { motion } from "motion/react";
 import {
   BarChart,
@@ -28,31 +28,45 @@ export function KPIDashboard() {
   const [polls, setPolls] = useState<any[]>([]);
   const [interactions, setInteractions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Fetch all data from Supabase on mount
+  // Fetch all data from Supabase
+  const loadData = async () => {
+    setIsRefreshing(true);
+    try {
+      const [artistsData, eventsData, pollsData, interactionsData] = await Promise.all([
+        fetchArtistWishes(),
+        fetchEvents(),
+        fetchPolls(),
+        fetchInteractions(),
+      ]);
+      
+      setArtistWishes(artistsData);
+      setEvents(eventsData);
+      setPolls(pollsData);
+      setInteractions(interactionsData);
+      setLastRefresh(new Date());
+    } catch (error) {
+      console.error('Error loading KPI data:', error);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  // Load data on mount
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const [artistsData, eventsData, pollsData, interactionsData] = await Promise.all([
-          fetchArtistWishes(),
-          fetchEvents(),
-          fetchPolls(),
-          fetchInteractions(),
-        ]);
-        
-        setArtistWishes(artistsData);
-        setEvents(eventsData);
-        setPolls(pollsData);
-        setInteractions(interactionsData);
-      } catch (error) {
-        console.error('Error loading KPI data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadData();
+  }, []);
+
+  // Auto-refresh every 30 seconds to show new entries in real-time
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   // Calculate KPIs
@@ -261,6 +275,28 @@ export function KPIDashboard() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Refresh Section */}
+        <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-gray-600">
+              Last updated: {lastRefresh.toLocaleTimeString()}
+            </div>
+            <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+          </div>
+          <motion.button
+            onClick={loadData}
+            disabled={isRefreshing}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-red-600 text-white rounded-lg hover:shadow-lg transition-all ${
+              isRefreshing ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            <RefreshCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isRefreshing ? 'Refreshing...' : 'Refresh Data'}</span>
+          </motion.button>
+        </div>
+
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {metrics.map((metric, index) => {
