@@ -1,11 +1,4 @@
-import {
-  getArtistWishes,
-  getEvents,
-  getPolls,
-  getInteractions,
-  type UserInteraction,
-} from "../lib/storage";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { BarChart3, TrendingUp, Users, Heart, Calendar, MapPin, Download, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 import {
@@ -23,16 +16,44 @@ import {
   Line,
   Legend,
 } from "recharts";
+import { fetchInteractions, fetchArtistWishes, fetchPolls, fetchEvents } from "../lib/api";
+import type { UserInteraction } from "../lib/storage";
 
 const COLORS = ['#2563eb', '#dc2626', '#3b82f6', '#ef4444', '#1d4ed8', '#b91c1c'];
 
 export function KPIDashboard() {
   const [selectedMetric, setSelectedMetric] = useState<'overview' | 'artists' | 'events' | 'engagement'>('overview');
+  const [artistWishes, setArtistWishes] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [polls, setPolls] = useState<any[]>([]);
+  const [interactions, setInteractions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const artistWishes = getArtistWishes();
-  const events = getEvents();
-  const polls = getPolls();
-  const interactions = getInteractions();
+  // Fetch all data from Supabase on mount
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [artistsData, eventsData, pollsData, interactionsData] = await Promise.all([
+          fetchArtistWishes(),
+          fetchEvents(),
+          fetchPolls(),
+          fetchInteractions(),
+        ]);
+        
+        setArtistWishes(artistsData);
+        setEvents(eventsData);
+        setPolls(pollsData);
+        setInteractions(interactionsData);
+      } catch (error) {
+        console.error('Error loading KPI data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   // Calculate KPIs
   const kpis = useMemo(() => {
@@ -43,25 +64,25 @@ export function KPIDashboard() {
       sum + p.options.reduce((optSum, opt) => optSum + opt.votes, 0), 0
     );
 
-    // Calculate percentage changes based on time periods
+    // Calculate percentage changes based on time periods (monthly comparison)
     const now = Date.now();
-    const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000);
-    const twoWeeksAgo = now - (14 * 24 * 60 * 60 * 1000);
+    const oneMonthAgo = now - (30 * 24 * 60 * 60 * 1000); // Last 30 days
+    const twoMonthsAgo = now - (60 * 24 * 60 * 60 * 1000); // 30-60 days ago
 
     // Split interactions by time period
-    const lastWeekInteractions = interactions.filter(i => i.timestamp >= oneWeekAgo);
-    const previousWeekInteractions = interactions.filter(i => i.timestamp >= twoWeeksAgo && i.timestamp < oneWeekAgo);
+    const lastMonthInteractions = interactions.filter((i: any) => i.timestamp >= oneMonthAgo);
+    const previousMonthInteractions = interactions.filter((i: any) => i.timestamp >= twoMonthsAgo && i.timestamp < oneMonthAgo);
 
     // Calculate metrics for each period
-    const calculateMetrics = (interactionList: UserInteraction[]) => ({
+    const calculateMetrics = (interactionList: any[]) => ({
       totalEngagements: interactionList.length,
-      eventInterest: interactionList.filter(i => i.action === 'interested').length,
-      artistVotes: interactionList.filter(i => i.action === 'wishlist').length,
-      pollResponses: interactionList.filter(i => i.action === 'vote').length,
+      eventInterest: interactionList.filter((i: any) => i.action === 'interested').length,
+      artistVotes: interactionList.filter((i: any) => i.action === 'wishlist').length,
+      pollResponses: interactionList.filter((i: any) => i.action === 'vote').length,
     });
 
-    const lastWeekMetrics = calculateMetrics(lastWeekInteractions);
-    const previousWeekMetrics = calculateMetrics(previousWeekInteractions);
+    const lastMonthMetrics = calculateMetrics(lastMonthInteractions);
+    const previousMonthMetrics = calculateMetrics(previousMonthInteractions);
 
     // Calculate percentage changes
     const calculateChange = (current: number, previous: number): string => {
@@ -74,10 +95,10 @@ export function KPIDashboard() {
     };
 
     const percentageChanges = {
-      totalEngagements: calculateChange(lastWeekMetrics.totalEngagements, previousWeekMetrics.totalEngagements),
-      eventInterest: calculateChange(lastWeekMetrics.eventInterest, previousWeekMetrics.eventInterest),
-      artistVotes: calculateChange(lastWeekMetrics.artistVotes, previousWeekMetrics.artistVotes),
-      pollResponses: calculateChange(lastWeekMetrics.pollResponses, previousWeekMetrics.pollResponses),
+      totalEngagements: calculateChange(lastMonthMetrics.totalEngagements, previousMonthMetrics.totalEngagements),
+      eventInterest: calculateChange(lastMonthMetrics.eventInterest, previousMonthMetrics.eventInterest),
+      artistVotes: calculateChange(lastMonthMetrics.artistVotes, previousMonthMetrics.artistVotes),
+      pollResponses: calculateChange(lastMonthMetrics.pollResponses, previousMonthMetrics.pollResponses),
     };
 
     // Top artists
@@ -294,27 +315,7 @@ export function KPIDashboard() {
           ))}
         </div>
 
-        {/* Charts Section */}
-        <div className="relative">
-          {/* Blur overlay */}
-          <div className="absolute inset-0 backdrop-blur-md bg-white/30 z-10 rounded-2xl flex items-center justify-center">
-            <div className="bg-white rounded-2xl p-8 shadow-2xl border-2 border-blue-200 text-center max-w-md">
-              <BarChart3 className="size-16 text-blue-600 inline-flex items-center" />
-              <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-blue-600 to-red-600 bg-clip-text text-transparent">
-                Analytics Dashboard
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Detailed analytics are available for event organizers and entertainment companies.
-              </p>
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <Sparkles className="size-4" />
-                <span>Real-time KPIs and insights</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Blurred content */}
-          <div className="filter blur-sm pointer-events-none">
+        {/* Charts Section - Now Public for All Visitors */}
         {selectedMetric === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Top Requested Artists */}
@@ -413,7 +414,7 @@ export function KPIDashboard() {
             </div>
             <div className="space-y-4">
               {kpis.topArtists.map((artist, index) => (
-                <div key={artist.name} className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-600 via-red-600 to-blue-600 rounded-xl">
+                <div key={artist.name} className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-red-50 rounded-xl">
                   <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-blue-600 via-red-600 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
                     {index + 1}
                   </div>
@@ -522,8 +523,6 @@ export function KPIDashboard() {
             </motion.div>
           </div>
         )}
-          </div>
-        </div>
 
         {/* Export Section */}
         <motion.div
