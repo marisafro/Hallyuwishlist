@@ -28,6 +28,7 @@ export function Root() {
       <ScrollToTop />
       
       {/* Header */}
+      
       <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
