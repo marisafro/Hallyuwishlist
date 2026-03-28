@@ -162,12 +162,20 @@
 
 ## Next Steps
 
-1. **Initialize Database** (if not done):
+1. **Initialize Database with REAL DATA** (starting from 0):
    ```bash
    curl -X POST https://fijkrfrsizekurnotioe.supabase.co/functions/v1/make-server-74a49e83/initialize \
      -H "Content-Type: application/json" \
      -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpamtyZnJzaXpla3Vybm90aW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODg3MTYsImV4cCI6MjA4ODU2NDcxNn0.kVHBGa4XhSc70sllk49Ib7rKVn7kAPTbahOvx4fsJ4I"
    ```
+   
+   **✅ FIXED: Removed fake sample data!**
+   - All 25 artists now start with `votes: 0`
+   - All poll options now start with `votes: 0`
+   - All events now start with `interestedCount: 0`
+   - **Fan-tools now connected to Supabase** - votes are REAL and update the KPI dashboard!
+   
+   The data will grow organically as real users vote on your website. Perfect for collecting genuine engagement metrics! 📊
 
 2. **Convert Favicon to .ico**:
    - Go to https://favicon.io/

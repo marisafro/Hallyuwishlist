@@ -86,7 +86,7 @@ app.get("/make-server-74a49e83/artist-wishes", async (c) => {
 app.post("/make-server-74a49e83/artist-vote", async (c) => {
   try {
     const body = await c.req.json();
-    const { artistId, userId } = body;
+    const { artistId, userId, ageGroup } = body;
     
     if (!artistId || !userId) {
       return c.json({ error: "Missing required fields: artistId, userId" }, 400);
@@ -101,18 +101,39 @@ app.post("/make-server-74a49e83/artist-vote", async (c) => {
     }
 
     // Check if user already voted
-    if (artist.votesByUser && artist.votesByUser[userId]) {
+    const voteKey = `vote:artist:${artistId}:${userId}`;
+    const existingVote = await kv.get(voteKey);
+    
+    if (existingVote) {
       return c.json({ error: "User already voted for this artist" }, 400);
     }
 
     // Update votes
     artist.votes = (artist.votes || 0) + 1;
-    if (!artist.votesByUser) {
-      artist.votesByUser = {};
-    }
-    artist.votesByUser[userId] = true;
     
+    // Track vote by user ID and age group
+    const voteRecord = {
+      artistId,
+      userId,
+      ageGroup: ageGroup || 'unknown',
+      timestamp: Date.now(),
+    };
+    
+    await kv.set(voteKey, voteRecord);
     await kv.set(artistKey, artist);
+    
+    // Create interaction record for KPI tracking
+    const interactionKey = `interaction:${Date.now()}:${userId}`;
+    const interaction = {
+      artistId,
+      action: 'wishlist',
+      timestamp: Date.now(),
+      userId,
+      ageGroup: ageGroup || 'unknown',
+    };
+    await kv.set(interactionKey, interaction);
+    
+    console.log(`Artist vote recorded: ${artist.artistName} - User: ${userId} - Age: ${ageGroup || 'unknown'}`);
     
     return c.json({ success: true, artist });
   } catch (error) {
@@ -136,7 +157,7 @@ app.get("/make-server-74a49e83/polls", async (c) => {
 app.post("/make-server-74a49e83/poll-vote", async (c) => {
   try {
     const body = await c.req.json();
-    const { pollId, optionId, userId } = body;
+    const { pollId, optionId, userId, ageGroup } = body;
     
     if (!pollId || !optionId || !userId) {
       return c.json({ error: "Missing required fields: pollId, optionId, userId" }, 400);
@@ -150,25 +171,46 @@ app.post("/make-server-74a49e83/poll-vote", async (c) => {
       return c.json({ error: "Poll not found" }, 404);
     }
 
-    // Find the option
+    // Check if user already voted in this poll
+    const voteKey = `vote:poll:${pollId}:${userId}`;
+    const existingVote = await kv.get(voteKey);
+    
+    if (existingVote) {
+      return c.json({ error: "User already voted in this poll" }, 400);
+    }
+
+    // Find the option and update votes
     const option = poll.options.find((o: any) => o.id === optionId);
     if (!option) {
       return c.json({ error: "Option not found" }, 404);
     }
 
-    // Check if user already voted
-    if (option.votesByUser && option.votesByUser[userId]) {
-      return c.json({ error: "User already voted in this poll" }, 400);
-    }
-
-    // Update votes
     option.votes = (option.votes || 0) + 1;
-    if (!option.votesByUser) {
-      option.votesByUser = {};
-    }
-    option.votesByUser[userId] = true;
     
+    // Track vote by user ID and age group
+    const voteRecord = {
+      pollId,
+      optionId,
+      userId,
+      ageGroup: ageGroup || 'unknown',
+      timestamp: Date.now(),
+    };
+    
+    await kv.set(voteKey, voteRecord);
     await kv.set(pollKey, poll);
+    
+    // Create interaction record for KPI tracking
+    const interactionKey = `interaction:${Date.now()}:${userId}`;
+    const interaction = {
+      pollId,
+      action: 'vote',
+      timestamp: Date.now(),
+      userId,
+      ageGroup: ageGroup || 'unknown',
+    };
+    await kv.set(interactionKey, interaction);
+    
+    console.log(`Poll vote recorded: ${poll.question} - Option: ${option.text} - User: ${userId} - Age: ${ageGroup || 'unknown'}`);
     
     return c.json({ success: true, poll });
   } catch (error) {
@@ -231,7 +273,7 @@ app.post("/make-server-74a49e83/event-interest", async (c) => {
 // Initialize default data (call this once to set up initial data)
 app.post("/make-server-74a49e83/initialize", async (c) => {
   try {
-    // Initialize artist wishes
+    // Initialize artist wishes with REAL data (starting from 0)
     const defaultArtists = [
       { id: "1", artistName: "SEVENTEEN", votes: 0, genre: "Boy Group" },
       { id: "2", artistName: "TXT (Tomorrow X Together)", votes: 0, genre: "Boy Group" },

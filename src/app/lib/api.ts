@@ -9,6 +9,31 @@ const headers = {
 };
 
 // ============================================
+// TYPES
+// ============================================
+
+export interface ArtistWish {
+  id: string;
+  artistName: string;
+  votes: number;
+  genre: string;
+  votesByUser?: Record<string, boolean>;
+}
+
+export interface PollOption {
+  id: string;
+  text: string;
+  votes: number;
+  votesByUser?: Record<string, boolean>;
+}
+
+export interface Poll {
+  id: string;
+  question: string;
+  options: PollOption[];
+}
+
+// ============================================
 // INTERACTIONS API
 // ============================================
 
@@ -64,12 +89,12 @@ export async function fetchArtistWishes() {
   }
 }
 
-export async function voteForArtist(artistId: string, userId: string) {
+export async function voteForArtist(artistId: string, userId: string, ageGroup?: string) {
   try {
     const response = await fetch(`${API_BASE}/artist-vote`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ artistId, userId }),
+      body: JSON.stringify({ artistId, userId, ageGroup }),
     });
     if (!response.ok) {
       const error = await response.json();
@@ -99,12 +124,12 @@ export async function fetchPolls() {
   }
 }
 
-export async function voteInPoll(pollId: string, optionId: string, userId: string) {
+export async function voteInPoll(pollId: string, optionId: string, userId: string, ageGroup?: string) {
   try {
     const response = await fetch(`${API_BASE}/poll-vote`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ pollId, optionId, userId }),
+      body: JSON.stringify({ pollId, optionId, userId, ageGroup }),
     });
     if (!response.ok) {
       const error = await response.json();

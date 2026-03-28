@@ -1,52 +1,72 @@
 import { useState, useEffect } from "react";
-import { Heart, Vote, Plus, CheckCircle, TrendingUp, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { Heart, Vote, CheckCircle, TrendingUp, Sparkles, Loader2 } from "lucide-react";
+import { motion } from "motion/react";
 import {
-  getArtistWishes,
-  addArtistVote,
-  addCustomArtist,
-  getPolls,
-  votePoll,
-  hasUserVotedForArtist,
-  hasUserVotedInPoll,
+  fetchArtistWishes,
+  fetchPolls,
+  voteForArtist,
+  voteInPoll,
+  trackInteraction,
   type ArtistWish,
   type Poll,
-} from "../lib/storage";
-import { getUserAgeGroup, setUserAgeGroup } from "../lib/fingerprint";
+} from "../lib/api";
+import { getUserIdentifier, getUserAgeGroup, setUserAgeGroup } from "../lib/fingerprint";
 import { AgeGroupModal } from "./age-group-modal";
 
 export function FanTools() {
-  const [artistWishes, setArtistWishes] = useState(getArtistWishes());
-  const [polls, setPolls] = useState(getPolls());
-  const [customArtistName, setCustomArtistName] = useState("");
-  const [customArtistGenre, setCustomArtistGenre] = useState("Boy Group");
+  const [artistWishes, setArtistWishes] = useState<ArtistWish[]>([]);
+  const [polls, setPolls] = useState<Poll[]>([]);
   const [votedPolls, setVotedPolls] = useState<Set<string>>(new Set());
   const [votedArtists, setVotedArtists] = useState<Set<string>>(new Set());
-  const [showAddForm, setShowAddForm] = useState(false);
   const [showAgeGroupModal, setShowAgeGroupModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<{type: 'artist' | 'poll', id: string, optionId?: string} | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Check for age group on mount
+  // Load data from Supabase on mount
   useEffect(() => {
-    const checkAgeGroup = async () => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [artists, pollsData] = await Promise.all([
+        fetchArtistWishes(),
+        fetchPolls(),
+      ]);
+      
+      console.log('Loaded artists:', artists);
+      console.log('Loaded polls:', pollsData);
+      
+      setArtistWishes(artists);
+      setPolls(pollsData);
+      
+      // Check which items the user has already voted for
+      const userId = await getUserIdentifier();
+      
+      // Check artist votes
+      const votedArtistIds = artists
+        .filter(a => a.votesByUser && a.votesByUser[userId])
+        .map(a => a.id);
+      setVotedArtists(new Set(votedArtistIds));
+      
+      // Check poll votes
+      const votedPollIds = pollsData
+        .filter(p => p.options.some(opt => opt.votesByUser && opt.votesByUser[userId]))
+        .map(p => p.id);
+      setVotedPolls(new Set(votedPollIds));
+      
+      // Check for age group
       const ageGroup = getUserAgeGroup();
       if (!ageGroup) {
         setShowAgeGroupModal(true);
       }
-      
-      // Load existing votes
-      const artistsPromises = artistWishes.map(a => hasUserVotedForArtist(a.id).then(voted => ({ id: a.id, voted })));
-      const artistVotes = await Promise.all(artistsPromises);
-      const votedArtistIds = artistVotes.filter(v => v.voted).map(v => v.id);
-      setVotedArtists(new Set(votedArtistIds));
-
-      const pollsPromises = polls.map(p => hasUserVotedInPoll(p.id).then(voted => ({ id: p.id, voted })));
-      const pollVotes = await Promise.all(pollsPromises);
-      const votedPollIds = pollVotes.filter(v => v.voted).map(v => v.id);
-      setVotedPolls(new Set(votedPollIds));
-    };
-    checkAgeGroup();
-  }, []);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAgeGroupSelect = (ageGroup: string) => {
     setUserAgeGroup(ageGroup);
@@ -64,15 +84,41 @@ export function FanTools() {
   };
 
   const executeArtistVote = async (artistId: string) => {
-    await addArtistVote(artistId);
-    setArtistWishes(getArtistWishes());
-    setVotedArtists(new Set([...votedArtists, artistId]));
+    try {
+      const userId = await getUserIdentifier();
+      const ageGroup = getUserAgeGroup();
+      
+      // Vote for the artist (includes age group tracking)
+      await voteForArtist(artistId, userId, ageGroup || undefined);
+      
+      // Reload data to get updated vote counts
+      await loadData();
+      
+      // Mark as voted
+      setVotedArtists(new Set([...votedArtists, artistId]));
+    } catch (error) {
+      console.error('Error voting for artist:', error);
+      alert('Failed to vote. You may have already voted for this artist.');
+    }
   };
 
   const executePollVote = async (pollId: string, optionId: string) => {
-    await votePoll(pollId, optionId);
-    setPolls(getPolls());
-    setVotedPolls(new Set([...votedPolls, pollId]));
+    try {
+      const userId = await getUserIdentifier();
+      const ageGroup = getUserAgeGroup();
+      
+      // Vote in the poll (includes age group tracking)
+      await voteInPoll(pollId, optionId, userId, ageGroup || undefined);
+      
+      // Reload data to get updated vote counts
+      await loadData();
+      
+      // Mark as voted
+      setVotedPolls(new Set([...votedPolls, pollId]));
+    } catch (error) {
+      console.error('Error voting in poll:', error);
+      alert('Failed to vote. You may have already voted in this poll.');
+    }
   };
 
   const handleArtistVote = async (artistId: string) => {
@@ -86,26 +132,6 @@ export function FanTools() {
     }
     
     await executeArtistVote(artistId);
-  };
-
-  const handleAddCustomArtist = async () => {
-    if (!customArtistName.trim()) return;
-    
-    const ageGroup = getUserAgeGroup();
-    if (!ageGroup) {
-      setShowAgeGroupModal(true);
-      return;
-    }
-    
-    await addCustomArtist(customArtistName, customArtistGenre);
-    const newWishes = getArtistWishes();
-    setArtistWishes(newWishes);
-    const newArtist = newWishes.find(w => w.artistName === customArtistName);
-    if (newArtist) {
-      setVotedArtists(new Set([...votedArtists, newArtist.id]));
-    }
-    setCustomArtistName("");
-    setShowAddForm(false);
   };
 
   const handlePollVote = async (pollId: string, optionId: string) => {
@@ -161,8 +187,7 @@ export function FanTools() {
                 repeatType: "reverse",
               }}
             />
-          ))}
-        </div>
+          ))}</div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -199,252 +224,202 @@ export function FanTools() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 gap-8">
-          {/* Artist Wishlist */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <div className="bg-gradient-to-br from-blue-50 to-red-50 rounded-2xl p-8 shadow-lg border border-blue-200">
-              <div className="flex items-center justify-between mb-6">
-                <div>
+      {/* Loading State */}
+      {loading ? (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+          <Loader2 className="size-12 mx-auto animate-spin text-blue-600 mb-4" />
+          <p className="text-gray-600">Loading fan tools...</p>
+        </div>
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 gap-8">
+            {/* Artist Wishlist */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <div className="bg-gradient-to-br from-blue-50 to-red-50 rounded-2xl p-8 shadow-lg border border-blue-200">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Heart className="size-6 text-blue-600" />
+                      </motion.div>
+                      Artist Wishlist
+                    </h2>
+                    <p className="text-gray-700">Vote for artists you want to see perform in Greece</p>
+                  </div>
+                </div>
+
+                {/* Boy Groups */}
+                {boyGroups.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-4 text-blue-600">Boy Groups</h3>
+                    <div className="space-y-3">
+                      {boyGroups.map((artist, index) => (
+                        <ArtistWishCard
+                          key={artist.id}
+                          artist={artist}
+                          onVote={handleArtistVote}
+                          hasVoted={votedArtists.has(artist.id)}
+                          index={index}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Girl Groups */}
+                {girlGroups.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-4 text-red-600">Girl Groups</h3>
+                    <div className="space-y-3">
+                      {girlGroups.map((artist, index) => (
+                        <ArtistWishCard
+                          key={artist.id}
+                          artist={artist}
+                          onVote={handleArtistVote}
+                          hasVoted={votedArtists.has(artist.id)}
+                          index={index}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Solo Artists */}
+                {soloArtists.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-4 text-purple-600">Solo Artists</h3>
+                    <div className="space-y-3">
+                      {soloArtists.map((artist, index) => (
+                        <ArtistWishCard
+                          key={artist.id}
+                          artist={artist}
+                          onVote={handleArtistVote}
+                          hasVoted={votedArtists.has(artist.id)}
+                          index={index}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Co-ed Groups */}
+                {coedGroups.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-4 text-orange-600">Co-ed Groups</h3>
+                    <div className="space-y-3">
+                      {coedGroups.map((artist, index) => (
+                        <ArtistWishCard
+                          key={artist.id}
+                          artist={artist}
+                          onVote={handleArtistVote}
+                          hasVoted={votedArtists.has(artist.id)}
+                          index={index}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-3 border-2 border-dashed border-blue-300 rounded-xl text-blue-600 hover:bg-blue-50 transition-colors font-semibold flex items-center justify-center gap-2"
+            >
+              <a href="contact-us">Request Another Artist</a>
+            </motion.div>
+
+            {/* Community Polls */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="bg-gradient-to-br from-blue-50 to-red-50 rounded-2xl p-8 shadow-lg border border-blue-200">
+                <div className="mb-6">
                   <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
                     <motion.div
-                      animate={{ scale: [1, 1.2, 1] }}
+                      animate={{ rotate: [0, 10, -10, 0] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      <Heart className="size-6 text-blue-600" />
+                      <Vote className="size-6 text-red-600" />
                     </motion.div>
-                    Artist Wishlist
+                    Community Polls
                   </h2>
-                  <p className="text-gray-700">Vote for artists you want to see perform in Greece</p>
+                  <p className="text-gray-700">Help us understand what the community wants</p>
+                </div>
+
+                <div className="space-y-8">
+                  {polls.map((poll, index) => (
+                    <PollCard
+                      key={poll.id}
+                      poll={poll}
+                      onVote={handlePollVote}
+                      hasVoted={votedPolls.has(poll.id)}
+                      index={index}
+                    />
+                  ))}
                 </div>
               </div>
-
-              {/* Boy Groups */}
-              {boyGroups.length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-4 text-blue-600">Boy Groups</h3>
-                  <div className="space-y-3">
-                    {boyGroups.map((artist, index) => (
-                      <ArtistWishCard
-                        key={artist.id}
-                        artist={artist}
-                        onVote={handleArtistVote}
-                        hasVoted={votedArtists.has(artist.id)}
-                        index={index}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Girl Groups */}
-              {girlGroups.length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-4 text-red-600">Girl Groups</h3>
-                  <div className="space-y-3">
-                    {girlGroups.map((artist, index) => (
-                      <ArtistWishCard
-                        key={artist.id}
-                        artist={artist}
-                        onVote={handleArtistVote}
-                        hasVoted={votedArtists.has(artist.id)}
-                        index={index}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Solo Artists */}
-              {soloArtists.length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-4 text-purple-600">Solo Artists</h3>
-                  <div className="space-y-3">
-                    {soloArtists.map((artist, index) => (
-                      <ArtistWishCard
-                        key={artist.id}
-                        artist={artist}
-                        onVote={handleArtistVote}
-                        hasVoted={votedArtists.has(artist.id)}
-                        index={index}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Co-ed Groups */}
-              {coedGroups.length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-4 text-orange-600">Co-ed Groups</h3>
-                  <div className="space-y-3">
-                    {coedGroups.map((artist, index) => (
-                      <ArtistWishCard
-                        key={artist.id}
-                        artist={artist}
-                        onVote={handleArtistVote}
-                        hasVoted={votedArtists.has(artist.id)}
-                        index={index}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/*} {!showAddForm ? (
-                <motion.button
-                  onClick={() => setShowAddForm(true)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 border-2 border-dashed border-blue-300 rounded-xl text-blue-600 hover:bg-blue-50 transition-colors font-semibold flex items-center justify-center gap-2"
-                >
-                  <Plus className="size-5" />
-                  Request Another Artist
-                </motion.button>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="border-2 border-blue-300 rounded-xl p-4 space-y-3 bg-white"
-                >
-                            
-                   <input
-                    type="text"
-                    placeholder="Artist name"
-                    value={customArtistName}
-                    onChange={(e) => setCustomArtistName(e.target.value)}
-                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  
-                    />
-                  <select
-                    value={customArtistGenre}
-                    onChange={(e) => setCustomArtistGenre(e.target.value)}
-                    className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  >
-                    <option>Boy Group</option>
-                    <option>Girl Group</option>
-                    <option>Solo Artist</option>
-                    <option>Co-ed Group</option>
-                  </select>
-                  <div className="flex gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleAddCustomArtist}
-                      className="flex-1 py-2 bg-gradient-to-r from-blue-600 to-red-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold"
-                    >
-                      Add
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        setShowAddForm(false);
-                        setCustomArtistName("");
-                      }}
-                      className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-semibold"
-                    >
-                      Cancel
-                    </motion.button>
-                  </div>
-                </motion.div>
-              )}*/}
-            </div>
-          </motion.div> 
-         
-          <motion.div whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 border-2 border-dashed border-blue-300 rounded-xl text-blue-600 hover:bg-blue-50 transition-colors font-semibold flex items-center justify-center gap-2"
-                >
-            <a href="contact-us">Request Another Artist</a>
             </motion.div>
-          
-          {/* Community Polls */}
+          </div>
+
+          {/* Impact Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="bg-gradient-to-r from-blue-600 via-red-600 to-blue-600 rounded-3xl p-8 md:p-12 text-center text-white mt-12 relative overflow-hidden shadow-2xl"
           >
-            <div className="bg-gradient-to-br from-blue-50 to-red-50 rounded-2xl p-8 shadow-lg border border-blue-200">
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                  <motion.div
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Vote className="size-6 text-red-600" />
-                  </motion.div>
-                  Community Polls
-                </h2>
-                <p className="text-gray-700">Help us understand what the community wants</p>
-              </div>
-
-              <div className="space-y-8">
-                {polls.map((poll, index) => (
-                  <PollCard
-                    key={poll.id}
-                    poll={poll}
-                    onVote={handlePollVote}
-                    hasVoted={votedPolls.has(poll.id)}
-                    index={index}
-                  />
-                ))}
-              </div>
+            {/* Animated sparkles */}
+            <div className="absolute inset-0">
+              {[...Array(20)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                  }}
+                  animate={{
+                    scale: [0, 1, 0],
+                    opacity: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 2 + Math.random(),
+                    repeat: Infinity,
+                    delay: Math.random() * 2,
+                  }}
+                >
+                  <Sparkles className="size-4 text-white" />
+                </motion.div>
+              ))}
+            </div>
+            <div className="relative">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <TrendingUp className="size-12 mx-auto mb-4" />
+              </motion.div>
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">Your Voice Matters</h2>
+              <p className="text-lg text-white/90 max-w-2xl mx-auto">
+                Event organizers and entertainment companies use this data to decide which artists to bring to Greece.
+                Your votes and feedback directly influence future events!
+              </p>
             </div>
           </motion.div>
         </div>
-
-        {/* Impact Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="bg-gradient-to-r from-blue-600 via-red-600 to-blue-600 rounded-3xl p-8 md:p-12 text-center text-white mt-12 relative overflow-hidden shadow-2xl"
-        >
-          {/* Animated sparkles */}
-          <div className="absolute inset-0">
-            {[...Array(20)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                }}
-                animate={{
-                  scale: [0, 1, 0],
-                  opacity: [0, 1, 0],
-                }}
-                transition={{
-                  duration: 2 + Math.random(),
-                  repeat: Infinity,
-                  delay: Math.random() * 2,
-                }}
-              >
-                <Sparkles className="size-4 text-white" />
-              </motion.div>
-            ))}</div>
-          <div className="relative">
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <TrendingUp className="size-12 mx-auto mb-4" />
-            </motion.div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Your Voice Matters</h2>
-            <p className="text-lg text-white/90 max-w-2xl mx-auto">
-              Event organizers and entertainment companies use this data to decide which artists to bring to Greece.
-              Your votes and feedback directly influence future events!
-            </p>
-          </div>
-        </motion.div>
-      </div>
+      )}
     </div>
   );
 }
@@ -470,7 +445,7 @@ function ArtistWishCard({
     >
       <div className="flex-1 min-w-0">
         <div className="font-semibold text-gray-900 truncate">{artist.artistName}</div>
-        <div className="text-sm text-gray-600">{artist.genre}</div>
+        <div className="text-sm text-gray-600">{artist.genre} • {artist.votes} {artist.votes === 1 ? 'vote' : 'votes'}</div>
       </div>
       <div className="flex items-center gap-3">
         <motion.button
@@ -547,7 +522,7 @@ function PollCard({
                       animate={{ scale: 1 }}
                       className="text-sm font-semibold text-blue-600"
                     >
-                      {percentage.toFixed(0)}%
+                      {percentage.toFixed(0)}% ({option.votes})
                     </motion.span>
                   )}
                 </div>

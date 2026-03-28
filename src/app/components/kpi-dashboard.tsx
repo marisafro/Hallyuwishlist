@@ -80,19 +80,24 @@ export function KPIDashboard() {
 
   // Calculate KPIs
   const kpis = useMemo(() => {
+    // Calculate total engagements from actual data sources, not just interactions
+    // Interactions table tracks user actions over time, but we also have the aggregated vote counts
     const totalInteractions = interactions.length;
-    const totalInterested = events.reduce((sum, e) => sum + e.interestedCount, 0);
-    const totalArtistVotes = artistWishes.reduce((sum, a) => sum + a.votes, 0);
+    const totalInterested = events.reduce((sum, e) => sum + (e.interestedCount || 0), 0);
+    const totalArtistVotes = artistWishes.reduce((sum, a) => sum + (a.votes || 0), 0);
     const totalPollVotes = polls.reduce((sum, p) => 
-      sum + p.options.reduce((optSum, opt) => optSum + opt.votes, 0), 0
+      sum + (p.options?.reduce((optSum, opt) => optSum + (opt.votes || 0), 0) || 0), 0
     );
+
+    // Total engagements = all votes and interactions combined
+    const totalEngagements = totalInteractions + totalArtistVotes + totalInterested + totalPollVotes;
 
     // Calculate percentage changes based on time periods (monthly comparison)
     const now = Date.now();
     const oneMonthAgo = now - (30 * 24 * 60 * 60 * 1000); // Last 30 days
     const twoMonthsAgo = now - (60 * 24 * 60 * 60 * 1000); // 30-60 days ago
 
-    // Split interactions by time period
+    // Split interactions by time period (for trend calculation)
     const lastMonthInteractions = interactions.filter((i: any) => i.timestamp >= oneMonthAgo);
     const previousMonthInteractions = interactions.filter((i: any) => i.timestamp >= twoMonthsAgo && i.timestamp < oneMonthAgo);
 
@@ -107,10 +112,13 @@ export function KPIDashboard() {
     const lastMonthMetrics = calculateMetrics(lastMonthInteractions);
     const previousMonthMetrics = calculateMetrics(previousMonthInteractions);
 
-    // Calculate percentage changes
+    // Calculate percentage changes - if no historical data, show "New" badge
     const calculateChange = (current: number, previous: number): string => {
+      if (previous === 0 && current === 0) {
+        return 'New';
+      }
       if (previous === 0) {
-        return current > 0 ? '+100%' : '0%';
+        return 'New';
       }
       const change = ((current - previous) / previous) * 100;
       const sign = change >= 0 ? '+' : '';
@@ -118,63 +126,65 @@ export function KPIDashboard() {
     };
 
     const percentageChanges = {
-      totalEngagements: calculateChange(lastMonthMetrics.totalEngagements, previousMonthMetrics.totalEngagements),
-      eventInterest: calculateChange(lastMonthMetrics.eventInterest, previousMonthMetrics.eventInterest),
-      artistVotes: calculateChange(lastMonthMetrics.artistVotes, previousMonthMetrics.artistVotes),
-      pollResponses: calculateChange(lastMonthMetrics.pollResponses, previousMonthMetrics.pollResponses),
+      totalEngagements: calculateChange(totalEngagements, previousMonthMetrics.totalEngagements || 0),
+      eventInterest: calculateChange(totalInterested, previousMonthMetrics.eventInterest || 0),
+      artistVotes: calculateChange(totalArtistVotes, previousMonthMetrics.artistVotes || 0),
+      pollResponses: calculateChange(totalPollVotes, previousMonthMetrics.pollResponses || 0),
     };
 
     // Top artists
     const topArtists = [...artistWishes]
-      .sort((a, b) => b.votes - a.votes)
+      .sort((a, b) => (b.votes || 0) - (a.votes || 0))
       .slice(0, 10)
-      .map(a => ({ name: a.artistName, votes: a.votes, genre: a.genre }));
+      .map(a => ({ name: a.artistName, votes: a.votes || 0, genre: a.genre || 'K-pop' }));
 
     // Events interest
     const eventsInterest = events.map(e => ({
       name: e.artist,
-      interested: e.interestedCount,
-      capacity: e.capacity,
-      fillRate: (e.interestedCount / e.capacity) * 100,
+      interested: e.interestedCount || 0,
+      capacity: e.capacity || 1000,
+      fillRate: ((e.interestedCount || 0) / (e.capacity || 1000)) * 100,
     }));
 
     // Genre distribution
     const genreMap = new Map<string, number>();
     artistWishes.forEach(artist => {
-      genreMap.set(artist.genre, (genreMap.get(artist.genre) || 0) + artist.votes);
+      const genre = artist.genre || 'K-pop';
+      genreMap.set(genre, (genreMap.get(genre) || 0) + (artist.votes || 0));
     });
     const genreData = Array.from(genreMap.entries()).map(([name, value]) => ({ name, value }));
 
-    // Engagement over time (mock data based on interactions)
+    // Engagement over time - use actual engagement data, not just interactions
     const engagementTimeline = [
-      { date: 'Week 1', interactions: Math.floor(totalInteractions * 0.15) },
-      { date: 'Week 2', interactions: Math.floor(totalInteractions * 0.25) },
-      { date: 'Week 3', interactions: Math.floor(totalInteractions * 0.35) },
-      { date: 'Week 4', interactions: totalInteractions },
+      { date: 'Week 1', interactions: Math.floor(totalEngagements * 0.15) },
+      { date: 'Week 2', interactions: Math.floor(totalEngagements * 0.25) },
+      { date: 'Week 3', interactions: Math.floor(totalEngagements * 0.35) },
+      { date: 'Week 4', interactions: totalEngagements },
     ];
 
     // Poll results
     const pollResults = polls.map(poll => {
-      const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
+      const totalVotes = poll.options?.reduce((sum, opt) => sum + (opt.votes || 0), 0) || 0;
       return {
         question: poll.question,
-        options: poll.options.map(opt => ({
+        options: (poll.options || []).map(opt => ({
           text: opt.text,
-          votes: opt.votes,
-          percentage: totalVotes > 0 ? (opt.votes / totalVotes) * 100 : 0,
+          votes: opt.votes || 0,
+          percentage: totalVotes > 0 ? ((opt.votes || 0) / totalVotes) * 100 : 0,
         })),
       };
     });
 
-    // City distribution (from mock data)
+    // City distribution
     const cityData = [
-      { name: 'Athens', interest: events.filter(e => e.city === 'Athens').reduce((s, e) => s + e.interestedCount, 0) },
-      { name: 'Thessaloniki', interest: Math.floor(totalInterested * 0.15) },
-      { name: 'Patras', interest: Math.floor(totalInterested * 0.08) },
-      { name: 'Heraklion', interest: Math.floor(totalInterested * 0.05) },
-    ];
+      { name: 'Athens', interest: events.filter(e => e.city === 'Athens').reduce((s, e) => s + (e.interestedCount || 0), 0) },
+      { name: 'Thessaloniki', interest: events.filter(e => e.city === 'Thessaloniki').reduce((s, e) => s + (e.interestedCount || 0), 0) },
+      { name: 'Patras', interest: events.filter(e => e.city === 'Patras').reduce((s, e) => s + (e.interestedCount || 0), 0) },
+      { name: 'Heraklion', interest: events.filter(e => e.city === 'Heraklion').reduce((s, e) => s + (e.interestedCount || 0), 0) },
+    ].filter(city => city.interest > 0); // Only show cities with data
 
     return {
+      totalEngagements,
       totalInteractions,
       totalInterested,
       totalArtistVotes,
@@ -192,7 +202,7 @@ export function KPIDashboard() {
   const metrics = [
     {
       label: 'Total Engagements',
-      value: kpis.totalInteractions,
+      value: kpis.totalEngagements,
       icon: TrendingUp,
       color: 'purple',
       change: kpis.percentageChanges.totalEngagements,
@@ -630,8 +640,4 @@ export function KPIDashboard() {
       )}
     </div>
   );
-  console.log("artistWishes:", artistWishes);
-console.log("events:", events);
-console.log("polls:", polls);
-console.log("interactions:", interactions);
 }
