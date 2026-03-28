@@ -20,19 +20,19 @@ export function Root() {
       if (!link) {
         link = document.createElement("link");
         link.rel = rel;
-        if (sizes) link.sizes = sizes;
+        if (sizes) link.setAttribute("sizes", sizes);
         document.head.appendChild(link);
       }
       link.href = href;
     };
 
-    // Set all favicon variants
-    setFavicon("/favicons/favicon.ico", "icon");
-    setFavicon("/favicons/favicon-16x16.png", "icon", "16x16");
-    setFavicon("/favicons/favicon-32x32.png", "icon", "32x32");
-    setFavicon("/favicons/apple-touch-icon.png", "apple-touch-icon", "180x180");
-    setFavicon("/favicons/android-chrome-192x192.png", "icon", "192x192");
-    setFavicon("/favicons/android-chrome-512x512.png", "icon", "512x512");
+    // Set all favicon variants - using root paths since publicDir copies them to root
+    setFavicon("/favicon.png", "icon");
+    setFavicon("/favicon-16x16.png", "icon", "16x16");
+    setFavicon("/favicon-16x16.png", "icon", "32x32");
+    setFavicon("/apple-touch-icon.png", "apple-touch-icon", "180x180");
+    setFavicon("/android-chrome-192x192.png", "icon", "192x192");
+    setFavicon("/android-chrome-512x512.png", "icon", "512x512");
 
     // Set meta tags for Google and SEO
     const setMetaTag = (name: string, content: string, property?: boolean) => {
@@ -54,13 +54,13 @@ export function Root() {
     setMetaTag("og:title", "Hallyu Wishlist - K-pop Events in Greece", true);
     setMetaTag("og:description", "Discover K-pop concerts and events in Greece. Vote for your favorite artists and join the Hallyu wave!", true);
     setMetaTag("og:type", "website", true);
-    setMetaTag("og:image", "/favicons/android-chrome-512x512.png", true);
+    setMetaTag("og:image", "/android-chrome-512x512.png", true);
     
     // Twitter Card tags
     setMetaTag("twitter:card", "summary_large_image");
     setMetaTag("twitter:title", "Hallyu Wishlist - K-pop Events in Greece");
     setMetaTag("twitter:description", "Discover K-pop concerts and events in Greece. Vote for your favorite artists!");
-    setMetaTag("twitter:image", "/favicons/android-chrome-512x512.png");
+    setMetaTag("twitter:image", "/android-chrome-512x512.png");
   }, []);
 
   const isActive = (path: string) => {

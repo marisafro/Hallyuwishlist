@@ -30,17 +30,25 @@ export function KPIDashboard() {
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch all data from Supabase
   const loadData = async () => {
     setIsRefreshing(true);
+    setError(null);
     try {
+      console.log('Fetching KPI data from Supabase...');
       const [artistsData, eventsData, pollsData, interactionsData] = await Promise.all([
         fetchArtistWishes(),
         fetchEvents(),
         fetchPolls(),
         fetchInteractions(),
       ]);
+      
+      console.log('Artists:', artistsData);
+      console.log('Events:', eventsData);
+      console.log('Polls:', pollsData);
+      console.log('Interactions:', interactionsData);
       
       setArtistWishes(artistsData);
       setEvents(eventsData);
@@ -49,6 +57,7 @@ export function KPIDashboard() {
       setLastRefresh(new Date());
     } catch (error) {
       console.error('Error loading KPI data:', error);
+      setError('Failed to load data from server. Please refresh the page or try again later.');
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -213,6 +222,43 @@ export function KPIDashboard() {
 
   return (
     <div className="min-h-screen">
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <RefreshCw className="size-16 text-blue-600 animate-spin mx-auto mb-4" />
+            <p className="text-lg text-gray-600">Loading KPI data from Supabase...</p>
+            <p className="text-sm text-gray-500 mt-2">This may take a moment on first load</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md text-center">
+            <div className="text-red-600 text-5xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Connection Error</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <div className="space-y-3">
+              <button
+                onClick={loadData}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-red-600 text-white rounded-lg hover:shadow-lg transition-all"
+              >
+                <RefreshCw className="size-5" />
+                Try Again
+              </button>
+              <p className="text-sm text-gray-500">
+                Make sure you've initialized the database. See SUPABASE_INITIALIZATION_GUIDE.md for instructions.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content - Only show when not loading and no error */}
+      {!loading && !error && (
+        <>
       {/* Header */}
       <section className="relative bg-gradient-to-r from-blue-600 via-red-600 to-blue-600 text-white py-20 overflow-hidden">
         {/* Animated background */}
@@ -580,6 +626,8 @@ export function KPIDashboard() {
 
         </motion.div>
       </div>
+        </>
+      )}
     </div>
   );
 }
