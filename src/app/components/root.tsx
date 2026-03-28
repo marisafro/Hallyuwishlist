@@ -4,6 +4,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ScrollToTop } from "./scroll-to-top";
 
+export const metadata = {
+  icons: {
+    icon: "src/app/favicons/favicon.png",
+  },
+};
 export function Root() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
