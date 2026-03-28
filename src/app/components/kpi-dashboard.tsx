@@ -630,4 +630,8 @@ export function KPIDashboard() {
       )}
     </div>
   );
+  console.log("artistWishes:", artistWishes);
+console.log("events:", events);
+console.log("polls:", polls);
+console.log("interactions:", interactions);
 }
