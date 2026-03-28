@@ -3,7 +3,7 @@ import { Calendar, Heart, BarChart3, Sparkles, TrendingUp, Users, Star } from "l
 import { motion } from "motion/react";
 import { getEvents } from "../lib/storage";
 import { format } from "date-fns";
-<meta name="google-site-verification" content="NHE9tKYzKIdXvbQo1irlOx4dQgJGKfNpgni8CstVouY" />
+
 
 export function Home() {
   const events = getEvents().slice(0, 3); // Show first 3 upcoming events
