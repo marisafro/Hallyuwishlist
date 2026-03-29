@@ -19,7 +19,7 @@ import {
 import { fetchInteractions, fetchArtistWishes, fetchPolls, fetchEvents } from "../lib/api";
 import type { UserInteraction } from "../lib/storage";
 
-const COLORS = ['#2563eb', '#dc2626', '#3b82f6', '#ef4444', '#1d4ed8', '#b91c1c'];
+const COLORS = ['#2563eb', '#dc2626', '#6d1cb9', '#b91c9f', '#1d4ed8', '#b91c1c'];
 
 export function KPIDashboard() {
   const [selectedMetric, setSelectedMetric] = useState<'overview' | 'artists' | 'events' | 'engagement'>('overview');
@@ -439,19 +439,24 @@ export function KPIDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-2xl p-8 shadow-lg border border-blue-100"
+              className="bg-white rounded-2xl p-4 sm:p-8 shadow-lg border border-blue-100"
             >
-              <h3 className="text-xl font-bold mb-6">Genre Preference</h3>
+              <h3 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Genre Preference</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
                     data={kpis.genreData}
                     cx="50%"
                     cy="50%"
-                    labelLine={true}
-                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
+                    labelLine={false}
+                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, index }) => {
+                      // Hide labels on small screens or when percentage is too small
+                      if (percent < 0.05) return null;
+                      
                       const RADIAN = Math.PI / 180;
-                      const radius = outerRadius + 30;
+                      // Adjust radius based on screen size - smaller on mobile
+                      const isMobile = window.innerWidth < 640;
+                      const radius = isMobile ? outerRadius + 15 : outerRadius + 30;
                       const x = cx + radius * Math.cos(-midAngle * RADIAN);
                       const y = cy + radius * Math.sin(-midAngle * RADIAN);
                       
@@ -462,13 +467,14 @@ export function KPIDashboard() {
                           fill="#374151"
                           textAnchor={x > cx ? 'start' : 'end'}
                           dominantBaseline="central"
-                          className="text-sm font-medium"
+                          className="text-xs sm:text-sm font-medium"
                         >
-                          {`${name}: ${(percent * 100).toFixed(0)}%`}
+                          {isMobile ? `${(percent * 100).toFixed(0)}%` : `${name}: ${(percent * 100).toFixed(0)}%`}
                         </text>
                       );
                     }}
-                    outerRadius={100}
+                    outerRadius={window.innerWidth < 640 ? 70 : 100}
+                    innerRadius={window.innerWidth < 640 ? 35 : 50}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -476,7 +482,22 @@ export function KPIDashboard() {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    formatter={(value: number) => `${value} votes`}
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      padding: '8px 12px'
+                    }}
+                  />
+                  <Legend 
+                    wrapperStyle={{
+                      paddingTop: '20px',
+                      fontSize: window.innerWidth < 640 ? '12px' : '14px'
+                    }}
+                    iconType="circle"
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </motion.div>
@@ -635,7 +656,7 @@ export function KPIDashboard() {
         )}
 
         {/* Export Section */}
-        <motion.div
+       {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -652,7 +673,7 @@ export function KPIDashboard() {
             </motion.div>
           
 
-        </motion.div>
+        </motion.div>*/}
       </div>
         </>
       )}

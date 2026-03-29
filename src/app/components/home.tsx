@@ -163,9 +163,8 @@ export function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: feature.delay }}
-              whileHover={{ y: -10, scale: 1.02 }}
-              className="bg-gradient-to-br from-blue-50 to-red-50 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all border border-blue-200"
+              
+              className="bg-gradient-to-br from-blue-50 to-red-50 rounded-2xl p-8 shadow-lg transition-all border border-blue-200"
             >
               <motion.div
                 animate={{

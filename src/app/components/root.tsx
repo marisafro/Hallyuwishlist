@@ -180,7 +180,7 @@ export function Root() {
 
       {/* Footer */}
       <footer className="bg-gradient-to-r from-blue-900/90 via-red-900/90 to-blue-900/90 backdrop-blur-md border-t border-blue-200 mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-9">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -188,11 +188,11 @@ export function Root() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-1 mb-3">
                 <div className="bg-gradient-to-r from-blue-600 to-red-600 p-2 rounded-lg shadow-lg">
                   <Sparkles className="size-5 text-white" />
                 </div>
-                <div className="text-lg font-bold bg-gradient-to-r from-blue-100 to-red-100 bg-clip-text text-transparent">
+                <div className="text-lg font-bold bg-gradient-to-r from-blue-100 to-red-100 bg-clip-text text-transparent ">
                   Hallyu Wishlist
                 </div>
               </div>
@@ -207,8 +207,8 @@ export function Root() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <h3 id="QuickLink" className="font-semibold text-white mb-4 margin-left-40">Quick Links</h3>
-              <ul className="space-y-2 text-sm text-blue-200">
+              <h3 id="QuickLink" className="font-semibold text-white mb-4 margin-left-20">Quick Links</h3>
+              <ul className="space-y-1 text-sm text-blue-200">
                 <li id="QuickLink"><Link to="/events" className="hover:text-red-300 transition-colors">Browse Events</Link></li>
                 <li id="QuickLink"><Link to="/fan-tools" className="hover:text-red-300 transition-colors">Fan Tools</Link></li>
                 <li id="QuickLink"><Link to="/kpi-dashboard" className="hover:text-red-300 transition-colors">Analytics</Link></li>
@@ -228,7 +228,7 @@ export function Root() {
               </p>
               <Link
                 to="/kpi-dashboard"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-red-600 text-white rounded-lg hover:shadow-lg transition-all text-sm shadow-md"
+                className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-red-600 text-white rounded-lg hover:shadow-lg transition-all text-sm shadow-md"
               >
                 <BarChart3 className="size-4" />
                 View Analytics

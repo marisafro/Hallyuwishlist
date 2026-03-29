@@ -93,8 +93,14 @@ export function FanTools() {
       // Vote for the artist (includes age group tracking)
       await voteForArtist(artistId, userId, ageGroup || undefined);
       
-      // Reload data to get updated vote counts
-      await loadData();
+      // Optimistically update UI without full reload - just increment the vote count
+      setArtistWishes(prevWishes => 
+        prevWishes.map(artist => 
+          artist.id === artistId 
+            ? { ...artist, votes: (artist.votes || 0) + 1 }
+            : artist
+        )
+      );
       
       // Mark as voted
       setVotedArtists(new Set([...votedArtists, artistId]));
@@ -112,8 +118,21 @@ export function FanTools() {
       // Vote in the poll (includes age group tracking)
       await voteInPoll(pollId, optionId, userId, ageGroup || undefined);
       
-      // Reload data to get updated vote counts
-      await loadData();
+      // Optimistically update UI without full reload - just increment the vote count
+      setPolls(prevPolls =>
+        prevPolls.map(poll =>
+          poll.id === pollId
+            ? {
+                ...poll,
+                options: poll.options.map(opt =>
+                  opt.id === optionId
+                    ? { ...opt, votes: (opt.votes || 0) + 1 }
+                    : opt
+                )
+              }
+            : poll
+        )
+      );
       
       // Mark as voted
       setVotedPolls(new Set([...votedPolls, pollId]));
