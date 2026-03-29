@@ -10,7 +10,6 @@ export function Home() {
 
   return (
     <div>
-      <link rel="icon" type="image/x-icon" href="src/app/favicon.png"/>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-red-600 to-blue-800 opacity-95" />

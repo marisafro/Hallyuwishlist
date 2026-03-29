@@ -3,6 +3,7 @@ import { Music2, Calendar, Heart, BarChart3, Menu, X, Sparkles } from "lucide-re
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ScrollToTop } from "./scroll-to-top";
+import { getFaviconDataUrl } from "../favicons/favicon-decoder";
 
 
 export function Root() {
@@ -15,19 +16,21 @@ export function Root() {
     document.title = "Hallyu Wishlist - K-pop Events in Greece";
     
     // Set favicon
-    const setFavicon = (href: string, rel: string = "icon", sizes?: string) => {
+    const setFavicon = (href: string, rel: string = "icon", sizes?: string, type?: string) => {
       let link = document.querySelector(`link[rel="${rel}"]${sizes ? `[sizes="${sizes}"]` : ''}`) as HTMLLinkElement;
       if (!link) {
         link = document.createElement("link");
         link.rel = rel;
         if (sizes) link.setAttribute("sizes", sizes);
+        if (type) link.type = type;
         document.head.appendChild(link);
       }
       link.href = href;
     };
 
     // Set all favicon variants - using root paths since publicDir copies them to root
-    setFavicon("/favicon.png", "icon");
+    setFavicon(getFaviconDataUrl(), "icon", undefined, "image/x-icon"); // Base64 ICO favicon
+    setFavicon("/favicon.png", "icon"); // PNG fallback
     setFavicon("/favicon-16x16.png", "icon", "16x16");
     setFavicon("/favicon-16x16.png", "icon", "32x32");
     setFavicon("/apple-touch-icon.png", "apple-touch-icon", "180x180");
