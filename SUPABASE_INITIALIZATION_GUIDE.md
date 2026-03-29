@@ -247,7 +247,13 @@ response = requests.post(url, headers=headers)
 print(f"Status Code: {response.status_code}")
 print(f"Response: {response.json()}")
 ```
-
+Invoke-RestMethod `
+  -Uri "https://fijkrfrsizekurnotioe.supabase.co/functions/v1/make-server-74a49e83/initialize" `
+  -Method POST `
+  -Headers @{
+    "Content-Type" = "application/json"
+    "Authorization" = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpamtyZnJzaXpla3Vybm90aW9lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5ODg3MTYsImV4cCI6MjA4ODU2NDcxNn0.kVHBGa4XhSc70sllk49Ib7rKVn7kAPTbahOvx4fsJ4I"
+  }
 ---
 
 ## After Initialization

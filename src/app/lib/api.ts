@@ -89,6 +89,22 @@ export async function fetchArtistWishes() {
   }
 }
 
+export async function checkArtistVotes(userId: string, artistIds: string[]) {
+  try {
+    const response = await fetch(`${API_BASE}/check-artist-votes`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ userId, artistIds }),
+    });
+    if (!response.ok) throw new Error('Failed to check artist votes');
+    const data = await response.json();
+    return data.votedArtists || {};
+  } catch (error) {
+    console.error('Error checking artist votes:', error);
+    return {};
+  }
+}
+
 export async function voteForArtist(artistId: string, userId: string, ageGroup?: string) {
   try {
     const response = await fetch(`${API_BASE}/artist-vote`, {
@@ -121,6 +137,22 @@ export async function fetchPolls() {
   } catch (error) {
     console.error('Error fetching polls:', error);
     return [];
+  }
+}
+
+export async function checkPollVotes(userId: string, pollIds: string[]) {
+  try {
+    const response = await fetch(`${API_BASE}/check-poll-votes`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ userId, pollIds }),
+    });
+    if (!response.ok) throw new Error('Failed to check poll votes');
+    const data = await response.json();
+    return data.votedPolls || {};
+  } catch (error) {
+    console.error('Error checking poll votes:', error);
+    return {};
   }
 }
 

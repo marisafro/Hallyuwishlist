@@ -82,6 +82,33 @@ app.get("/make-server-74a49e83/artist-wishes", async (c) => {
   }
 });
 
+// Check if user has voted for specific artists
+app.post("/make-server-74a49e83/check-artist-votes", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { userId, artistIds } = body;
+    
+    if (!userId || !artistIds || !Array.isArray(artistIds)) {
+      return c.json({ error: "Missing required fields: userId, artistIds" }, 400);
+    }
+
+    const votedArtists: Record<string, boolean> = {};
+    
+    for (const artistId of artistIds) {
+      const voteKey = `vote:artist:${artistId}:${userId}`;
+      const existingVote = await kv.get(voteKey);
+      if (existingVote) {
+        votedArtists[artistId] = true;
+      }
+    }
+    
+    return c.json({ votedArtists });
+  } catch (error) {
+    console.log(`Error checking artist votes: ${error}`);
+    return c.json({ error: "Failed to check votes" }, 500);
+  }
+});
+
 // Vote for an artist
 app.post("/make-server-74a49e83/artist-vote", async (c) => {
   try {
@@ -156,6 +183,33 @@ app.get("/make-server-74a49e83/polls", async (c) => {
   } catch (error) {
     console.log(`Error fetching polls: ${error}`);
     return c.json({ error: "Failed to fetch polls" }, 500);
+  }
+});
+
+// Check if user has voted in specific polls
+app.post("/make-server-74a49e83/check-poll-votes", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { userId, pollIds } = body;
+    
+    if (!userId || !pollIds || !Array.isArray(pollIds)) {
+      return c.json({ error: "Missing required fields: userId, pollIds" }, 400);
+    }
+
+    const votedPolls: Record<string, boolean> = {};
+    
+    for (const pollId of pollIds) {
+      const voteKey = `vote:poll:${pollId}:${userId}`;
+      const existingVote = await kv.get(voteKey);
+      if (existingVote) {
+        votedPolls[pollId] = true;
+      }
+    }
+    
+    return c.json({ votedPolls });
+  } catch (error) {
+    console.log(`Error checking poll votes: ${error}`);
+    return c.json({ error: "Failed to check votes" }, 500);
   }
 });
 

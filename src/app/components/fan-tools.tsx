@@ -7,6 +7,8 @@ import {
   voteForArtist,
   voteInPoll,
   trackInteraction,
+  checkArtistVotes,
+  checkPollVotes,
   type ArtistWish,
   type Poll,
 } from "../lib/api";
@@ -44,17 +46,17 @@ export function FanTools() {
       // Check which items the user has already voted for
       const userId = await getUserIdentifier();
       
-      // Check artist votes
-      const votedArtistIds = artists
-        .filter(a => a.votesByUser && a.votesByUser[userId])
-        .map(a => a.id);
+      // Check artist votes - pass all artist IDs to backend
+      const artistIds = artists.map(a => a.id);
+      const votedArtistsObj = await checkArtistVotes(userId, artistIds);
+      const votedArtistIds = Object.keys(votedArtistsObj).filter(id => votedArtistsObj[id]);
       setVotedArtists(new Set(votedArtistIds));
       
-      // Check poll votes
-      const votedPollIds = pollsData
-        .filter(p => p.options.some(opt => opt.votesByUser && opt.votesByUser[userId]))
-        .map(p => p.id);
-      setVotedPolls(new Set(votedPollIds));
+      // Check poll votes - pass all poll IDs to backend
+      const pollIds = pollsData.map(p => p.id);
+      const votedPollsObj = await checkPollVotes(userId, pollIds);
+      const votedPollIdsList = Object.keys(votedPollsObj).filter(id => votedPollsObj[id]);
+      setVotedPolls(new Set(votedPollIdsList));
       
       // Check for age group
       const ageGroup = getUserAgeGroup();
