@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { fetchInteractions, fetchArtistWishes, fetchPolls, fetchEvents } from "../lib/api";
 import type { UserInteraction } from "../lib/storage";
+import type { Poll } from "../lib/storage";
 
 const COLORS = ['#2563eb', '#dc2626', '#6d1cb9', '#b91c9f', '#1d4ed8', '#b91c1c'];
 
@@ -25,12 +26,13 @@ export function KPIDashboard() {
   const [selectedMetric, setSelectedMetric] = useState<'overview' | 'artists' | 'events' | 'engagement'>('overview');
   const [artistWishes, setArtistWishes] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
-  const [polls, setPolls] = useState<any[]>([]);
+  const [polls, setPolls] = useState<Poll[]>([]);
   const [interactions, setInteractions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isBlurred, setIsBlurred] = useState(true); // Blur enabled by default for data privacy
 
   // Fetch all data from Supabase
   const loadData = async () => {
@@ -339,6 +341,8 @@ export function KPIDashboard() {
             </div>
             <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
           </div>
+          
+          {/* Refresh Button */}
           <motion.button
             onClick={loadData}
             disabled={isRefreshing}
@@ -349,7 +353,8 @@ export function KPIDashboard() {
             }`}
           >
             <RefreshCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>{isRefreshing ? 'Refreshing...' : 'Refresh Data'}</span>
+            <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh Monthly Data'}</span>
+            <span className="sm:hidden">{isRefreshing ? '...' : 'Refresh'}</span>
           </motion.button>
         </div>
 
@@ -407,7 +412,42 @@ export function KPIDashboard() {
           ))}
         </div>
 
-        {/* Charts Section - Now Public for All Visitors */}
+        {/* Charts Section - Always renders, blur overlay protects privacy */}
+        <div className="relative">
+          {/* Permanent Blur Overlay - Comment out this section to reveal data */}
+          {/* START BLUR OVERLAY - Remove or comment out to show analytics */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 z-10 backdrop-blur-lg bg-white/30 rounded-3xl flex items-center justify-center"
+            style={{ minHeight: '400px' }}
+          >
+            <div className="text-center px-6">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <BarChart3 className="size-16 mx-auto mb-4 text-blue-600" />
+              </motion.div>
+              <h3 className="text-3xl font-bold text-gray-900 mb-3">Request Data Analytics</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                Access detailed KPIs, fan demographics, and market insights. Contact us to receive comprehensive analytics reports.
+              </p>
+              <motion.a
+                href="/contact-us"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-red-600 text-white rounded-xl hover:shadow-xl transition-all font-semibold text-lg"
+              >
+                <Sparkles className="size-5" />
+                Contact Us for Analytics
+              </motion.a>
+            </div>
+          </motion.div>
+          {/* END BLUR OVERLAY */}
+          
+          {/* Charts content - always rendered behind the blur */}
+          <div className="transition-all duration-300 pointer-events-none select-none">
         {selectedMetric === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Top Requested Artists */}
@@ -654,6 +694,8 @@ export function KPIDashboard() {
             </motion.div>
           </div>
         )}
+          </div>
+        </div>
 
         {/* Export Section */}
        {/* <motion.div
