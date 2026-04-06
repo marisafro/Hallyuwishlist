@@ -32,7 +32,7 @@ export function Root() {
     setFavicon(getFaviconDataUrl(), "icon", undefined, "image/x-icon"); // Base64 ICO favicon
     setFavicon("/favicon.png", "icon"); // PNG fallback
     setFavicon("/favicon-16x16.png", "icon", "16x16");
-    setFavicon("/favicon-16x16.png", "icon", "32x32");
+    setFavicon("/favicon.png", "icon", "32x32");
     setFavicon("/apple-touch-icon.png", "apple-touch-icon", "180x180");
     setFavicon("/android-chrome-192x192.png", "icon", "192x192");
     setFavicon("/android-chrome-512x512.png", "icon", "512x512");
