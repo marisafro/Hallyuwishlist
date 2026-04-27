@@ -184,9 +184,10 @@ export function Root() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-blue-900/90 via-red-900/90 to-blue-900/90 backdrop-blur-md border-t border-blue-200 mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-9">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <footer className="bg-gradient-to-r from-blue-900/95 via-red-900/95 to-blue-900/95 backdrop-blur-md border-t border-blue-700/50 mt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+            {/* Brand Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -194,19 +195,20 @@ export function Root() {
               transition={{ duration: 0.6 }}
               className="text-center md:text-left"
             >
-              <div className="flex items-center gap-1 mb-3 justify-center md:justify-start">
-                <div className="bg-gradient-to-r from-blue-600 to-red-600 p-2 rounded-lg shadow-lg">
+              <div className="flex items-center gap-2 mb-4 justify-center md:justify-start">
+                <div className="bg-gradient-to-r from-blue-600 to-red-600 p-2.5 rounded-lg shadow-lg">
                   <Sparkles className="size-5 text-white" />
                 </div>
-                <div className="text-lg font-bold bg-gradient-to-r from-blue-100 to-red-100 bg-clip-text text-transparent">
+                <div className="text-xl font-bold text-white">
                   Hallyu Wishlist
                 </div>
               </div>
-              <p className="text-sm text-blue-200">
+              <p className="text-sm text-blue-100/80 leading-relaxed max-w-xs mx-auto md:mx-0">
                 Bridging Greece and Korea through K-pop concerts, events, and fan community engagement.
               </p>
             </motion.div>
 
+            {/* Quick Links */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -214,15 +216,32 @@ export function Root() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-center md:text-left"
             >
-              <h3 className="font-semibold text-white mb-4">Quick Links</h3>
-              <ul className="space-y-1 text-sm text-blue-200">
-                <li><Link to="/events" className="hover:text-red-300 transition-colors">Browse Events</Link></li>
-                <li><Link to="/fan-tools" className="hover:text-red-300 transition-colors">Fan Tools</Link></li>
-                <li><Link to="/kpi-dashboard" className="hover:text-red-300 transition-colors">Analytics</Link></li>
-                <li><Link to="/contact-us" className="hover:text-red-300 transition-colors">Contact Us</Link></li>
+              <h3 className="font-bold text-white mb-4 text-base">Quick Links</h3>
+              <ul className="space-y-2.5">
+                <li>
+                  <Link to="/events" className="text-sm text-blue-100/80 hover:text-white transition-colors inline-flex items-center gap-1 group">
+                    <span className="group-hover:translate-x-1 transition-transform">Browse Events</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/fan-tools" className="text-sm text-blue-100/80 hover:text-white transition-colors inline-flex items-center gap-1 group">
+                    <span className="group-hover:translate-x-1 transition-transform">Fan Tools</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/kpi-dashboard" className="text-sm text-blue-100/80 hover:text-white transition-colors inline-flex items-center gap-1 group">
+                    <span className="group-hover:translate-x-1 transition-transform">Analytics</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact-us" className="text-sm text-blue-100/80 hover:text-white transition-colors inline-flex items-center gap-1 group">
+                    <span className="group-hover:translate-x-1 transition-transform">Contact Us</span>
+                  </Link>
+                </li>
               </ul>
             </motion.div>
 
+            {/* For Companies */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -230,14 +249,14 @@ export function Root() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-center md:text-left"
             >
-              <h3 className="font-semibold text-white mb-4">For Companies</h3>
-              <p className="text-sm text-blue-200 mb-4">
+              <h3 className="font-bold text-white mb-4 text-base">For Companies</h3>
+              <p className="text-sm text-blue-100/80 mb-5 leading-relaxed">
                 Partner with us to bring K-pop to Greece. Access our analytics dashboard for valuable insights.
               </p>
               <div className="flex justify-center md:justify-start">
                 <Link
                   to="/kpi-dashboard"
-                  className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-red-600 text-white rounded-lg hover:shadow-lg transition-all text-sm shadow-md"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-red-600 text-white rounded-lg hover:shadow-xl hover:scale-105 transition-all text-sm font-semibold shadow-lg"
                 >
                   <BarChart3 className="size-4" />
                   View Analytics
@@ -246,9 +265,16 @@ export function Root() {
             </motion.div>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-blue-800 text-center text-sm text-blue-200">
-            <p>© 2026 Hallyu Wishlist. Greece 🇬🇷 × Korea 🇰🇷</p>
-            <p>All content belongs to its respective owners. We do not own any of the content shown</p>
+          {/* Copyright Section */}
+          <div className="mt-12 pt-8 border-t border-blue-700/50">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-blue-100/90 font-medium">
+                © 2026 Hallyu Wishlist • Greece 🇬🇷 × Korea 🇰🇷
+              </p>
+              <p className="text-xs text-blue-200/60">
+                All content belongs to its respective owners. We do not own any of the content shown.
+              </p>
+            </div>
           </div>
         </div>
       </footer>
