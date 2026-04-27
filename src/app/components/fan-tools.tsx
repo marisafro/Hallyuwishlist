@@ -483,7 +483,7 @@ function ArtistWishCard({
             </motion.span>
           )}
         </div>
-        <div className="text-sm text-gray-600">{artist.genre} • {artist.votes} {artist.votes === 1 ? 'vote' : 'votes'}</div>
+        <div className="text-sm text-gray-600">{artist.genre}</div>
       </div>
       <div className="flex items-center gap-3">
         <motion.button
@@ -560,7 +560,7 @@ function PollCard({
                       animate={{ scale: 1 }}
                       className="text-sm font-semibold text-blue-600"
                     >
-                      {percentage.toFixed(0)}% ({option.votes})
+                      {percentage.toFixed(0)}%
                     </motion.span>
                   )}
                 </div>
@@ -587,7 +587,7 @@ function PollCard({
           animate={{ opacity: 1, y: 0 }}
           className="mt-3 text-sm text-gray-600"
         >
-          {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} • Thank you for participating!
+          Thank you for participating!
         </motion.div>
       )}
     </motion.div>
