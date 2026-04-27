@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Vote, CheckCircle, TrendingUp, Sparkles, Loader2 } from "lucide-react";
+import { Heart, Vote, CheckCircle, TrendingUp, Sparkles, Loader2, Star } from "lucide-react";
 import { motion } from "motion/react";
 import {
   fetchArtistWishes,
@@ -456,6 +456,10 @@ function ArtistWishCard({
   hasVoted: boolean;
   index: number;
 }) {
+  // Show NEW badge if artist was added within the last 3 weeks (21 days)
+  const THREE_WEEKS_MS = 21 * 24 * 60 * 60 * 1000;
+  const isNew = artist.createdAt && (Date.now() - artist.createdAt) < THREE_WEEKS_MS;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -465,7 +469,20 @@ function ArtistWishCard({
       className="flex items-center gap-4 p-4 bg-white rounded-xl border border-blue-200 shadow-sm"
     >
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-gray-900 truncate">{artist.artistName}</div>
+        <div className="flex items-center gap-2">
+          <div className="font-semibold text-gray-900 truncate">{artist.artistName}</div>
+          {isNew && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: index * 0.05 + 0.2, type: "spring" }}
+              className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs font-bold rounded-full shadow-sm"
+            >
+              <Star className="size-3" />
+              NEW
+            </motion.span>
+          )}
+        </div>
         <div className="text-sm text-gray-600">{artist.genre} • {artist.votes} {artist.votes === 1 ? 'vote' : 'votes'}</div>
       </div>
       <div className="flex items-center gap-3">

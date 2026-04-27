@@ -6,7 +6,8 @@ import { EventDetail } from "./components/event-detail";
 import { FanTools } from "./components/fan-tools";
 import { KPIDashboard } from "./components/kpi-dashboard";
 import { NotFound } from "./components/not-found";
-import {ContactUs} from "./components/contact-us";
+import { ContactUs } from "./components/contact-us";
+import { AdminRestore } from "./components/admin-restore";
 
 export const router = createBrowserRouter([
   {
@@ -18,8 +19,9 @@ export const router = createBrowserRouter([
       { path: "events/:id", Component: EventDetail },
       { path: "fan-tools", Component: FanTools },
       { path: "kpi-dashboard", Component: KPIDashboard },
-      { path: "*", Component: NotFound },
       { path: "contact-us", Component: ContactUs },
+      { path: "admin-restore", Component: AdminRestore }, // Admin only - restore tool
+      { path: "*", Component: NotFound },
     ],
   },
 ]);

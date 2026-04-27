@@ -10,6 +10,11 @@ export function Root() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Auto-sync disabled - use /admin-sync to manually trigger sync
+  // useEffect(() => {
+  //   syncStorageToSupabase().catch(console.error);
+  // }, []);
+
   // Set favicon and meta tags for Google
   useEffect(() => {
     // Set page title
@@ -187,12 +192,13 @@ export function Root() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
+              className="text-center md:text-left"
             >
-              <div className="flex items-center gap-1 mb-3">
+              <div className="flex items-center gap-1 mb-3 justify-center md:justify-start">
                 <div className="bg-gradient-to-r from-blue-600 to-red-600 p-2 rounded-lg shadow-lg">
                   <Sparkles className="size-5 text-white" />
                 </div>
-                <div className="text-lg font-bold bg-gradient-to-r from-blue-100 to-red-100 bg-clip-text text-transparent ">
+                <div className="text-lg font-bold bg-gradient-to-r from-blue-100 to-red-100 bg-clip-text text-transparent">
                   Hallyu Wishlist
                 </div>
               </div>
@@ -206,13 +212,14 @@ export function Root() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-center md:text-left"
             >
-              <h3 id="QuickLink" className="font-semibold text-white mb-4 margin-left-20">Quick Links</h3>
+              <h3 className="font-semibold text-white mb-4">Quick Links</h3>
               <ul className="space-y-1 text-sm text-blue-200">
-                <li id="QuickLink"><Link to="/events" className="hover:text-red-300 transition-colors">Browse Events</Link></li>
-                <li id="QuickLink"><Link to="/fan-tools" className="hover:text-red-300 transition-colors">Fan Tools</Link></li>
-                <li id="QuickLink"><Link to="/kpi-dashboard" className="hover:text-red-300 transition-colors">Analytics</Link></li>
-                <li id="QuickLink"><Link to="/contact-us" className="hover:text-red-300 transition-colors">Contact Us</Link></li>
+                <li><Link to="/events" className="hover:text-red-300 transition-colors">Browse Events</Link></li>
+                <li><Link to="/fan-tools" className="hover:text-red-300 transition-colors">Fan Tools</Link></li>
+                <li><Link to="/kpi-dashboard" className="hover:text-red-300 transition-colors">Analytics</Link></li>
+                <li><Link to="/contact-us" className="hover:text-red-300 transition-colors">Contact Us</Link></li>
               </ul>
             </motion.div>
 
@@ -221,18 +228,21 @@ export function Root() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-center md:text-left"
             >
-              <h3 className="font-semibold text-white mb-4 margin-left-40">For Companies</h3>
+              <h3 className="font-semibold text-white mb-4">For Companies</h3>
               <p className="text-sm text-blue-200 mb-4">
                 Partner with us to bring K-pop to Greece. Access our analytics dashboard for valuable insights.
               </p>
-              <Link
-                to="/kpi-dashboard"
-                className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-red-600 text-white rounded-lg hover:shadow-lg transition-all text-sm shadow-md"
-              >
-                <BarChart3 className="size-4" />
-                View Analytics
-              </Link>
+              <div className="flex justify-center md:justify-start">
+                <Link
+                  to="/kpi-dashboard"
+                  className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-red-600 text-white rounded-lg hover:shadow-lg transition-all text-sm shadow-md"
+                >
+                  <BarChart3 className="size-4" />
+                  View Analytics
+                </Link>
+              </div>
             </motion.div>
           </div>
 

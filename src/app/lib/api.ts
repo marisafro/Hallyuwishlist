@@ -18,6 +18,7 @@ export interface ArtistWish {
   votes: number;
   genre: string;
   votesByUser?: Record<string, boolean>;
+  createdAt?: number;
 }
 
 export interface PollOption {
@@ -120,6 +121,41 @@ export async function voteForArtist(artistId: string, userId: string, ageGroup?:
     return data;
   } catch (error) {
     console.error('Error voting for artist:', error);
+    throw error;
+  }
+}
+
+export async function addArtist(artistName: string, genre: string) {
+  try {
+    const response = await fetch(`${API_BASE}/add-artist`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ artistName, genre }),
+    });
+
+    // Log response details for debugging
+    console.log('Add artist response status:', response.status);
+
+    // Get response text first
+    const responseText = await response.text();
+    console.log('Add artist response text:', responseText);
+
+    // Try to parse as JSON
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse response as JSON:', responseText);
+      throw new Error(`Server returned invalid JSON: ${responseText.substring(0, 100)}`);
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to add artist');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error adding artist:', error);
     throw error;
   }
 }

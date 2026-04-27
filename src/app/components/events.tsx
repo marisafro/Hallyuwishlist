@@ -45,6 +45,18 @@ interface PastEvent {
 {/*Past Concert Details*/}
 export const pastConcerts: PastConcert[] = [
   
+ {
+    id: "pastc-5",
+    title: "TRENDZ - [ON THE MOVE] Tour (2026)",
+    artist: "TRENDZ",
+    date: "2026-04-08",
+    venue: "WE",
+    city: "Thessaloniki",
+    image: "https://www.more.com/getattachment/ff0c40be-504d-401b-a1d7-a8428bd96e32/TRENDZ-(KR)-FOR-THE-FIRST-TIME-LIVE-IN-THESSA834cd.png ",
+    description: "",
+    capacity: "apx. 1000",
+    type:"concert",
+  },
   {
     id: "pastc-8",
     title: "XLOV - First Full Europe Tour (2026)",
@@ -140,7 +152,19 @@ export const pastConcerts: PastConcert[] = [
 {/*Past Event Details*/}
 export const pastEvents: PastEvent[] = [
 
-{
+  {
+    id: "paste-4",
+    title: "Choom KPOP FESTIVAL - Thessaloniki",
+    artist: "Choom KPOP FESTIVAL",
+    date: "2026-03-29",
+    venue: "Ioannis Vellidis Convention Center",
+    city: "Thessaloniki",
+    image: "https://choomkpopfestival.gr/wp-content/uploads/2025/09/choom-logo-homepage.png",
+    description: "",
+    capacity: "apx. 1500",
+    type:"event",
+  },
+  {
     id: "paste-3",
     title: "LEVEL10KCONVENTION 2025 - Athens",
     description: "",

@@ -85,23 +85,11 @@ export interface UserInteraction {
 }
 
 // Upcoming events data
+// 🎯 ADMIN: Add new events here - they will auto-sync to Supabase on app load
 export const upcomingEvents: Event[] = [
- 
-   {
-    id: "4",
-    title: "Choom KPOP FESTIVAL - Thessaloniki",
-    artist: "Choom KPOP FESTIVAL",
-    date: "2026-03-29",
-    venue: "Ioannis Vellidis Convention Center",
-    city: "Thessaloniki",
-    image: "https://choomkpopfestival.gr/wp-content/uploads/2025/09/choom-logo-homepage.png",
-    description: "",
-    capacity: "apx. 1500",
-    interestedCount: 0,
-  },
-
+  
   {
-    id: "3",
+    id: "1",
     title: "LEVEL10KCONVENTION 2026 Thessaloniki",
     artist: "LEVEL10KCONVENTION",
     date: "2026-06-27",
@@ -112,20 +100,9 @@ export const upcomingEvents: Event[] = [
     capacity: "apx. 1000",
     interestedCount: 0,
   },
- {
-    id: "2",
-    title: "TRENDZ",
-    artist: "TRENDZ",
-    date: "2026-04-08",
-    venue: "WE",
-    city: "Thessaloniki",
-    image: "https://www.more.com/getattachment/ff0c40be-504d-401b-a1d7-a8428bd96e32/TRENDZ-(KR)-FOR-THE-FIRST-TIME-LIVE-IN-THESSA834cd.png ",
-    description: "",
-    capacity: "apx. 1000",
-    interestedCount: 0,
-  },
+  
   {
-    id: "1",
+    id: "2",
     title: "LEVEL10KCONVENTION 2026 - Athens ",
     artist: "LEVEL10KCONVENTION",
     date: "2026-08-10",
@@ -136,9 +113,19 @@ export const upcomingEvents: Event[] = [
     capacity: "TBA",
     interestedCount: 0,
   },
-  
-
- ];
+  {
+    id: "3",
+    title: "KONFECTIONERY DANCE CAMP 2026 - Athens ",
+    artist: "KONFECTIONERY DANCE CAMP",
+    date: "2026-05-02",
+    venue: "Αμαξοστάσιο ΟΣΥ - Πλατεία Αττικής",
+    city: "Athens",
+    image: "https://iili.io/BP8gNz7.md.png",
+    description: "",
+    capacity: "TBA",
+    interestedCount: 0,
+  },
+];
 
 // Initialize events in localStorage if not present
 
@@ -199,6 +186,8 @@ export const updateEvent = (event: Event) => {
   const allEvents = upcomingEvents(); */
   
 // Artist wishlist
+// 🎯 ADMIN: Add new artists here - they will auto-sync to Supabase on app load
+// Format: { id: "##", artistName: "NAME", votes: 0, genre: "Boy Group|Girl Group|Solo Artist|Co-ed Group" }
 export const getArtistWishes = (): ArtistWish[] => {
   const stored = localStorage.getItem('kpop_artist_wishes');
   return stored ? JSON.parse(stored) : [
@@ -228,8 +217,9 @@ export const getArtistWishes = (): ArtistWish[] => {
     { id: "24", artistName: "I-DLE", votes: 0, genre: "Girl Group" },
     { id: "25", artistName: "TRENDZ", votes: 0, genre: "Boy Group" },
     { id: "26", artistName: "YOUNGJI", votes: 0, genre: "Solo Artist" },
-    
-    
+    { id: "27", artistName: "NMIXX", votes: 0, genre: "Girl Group" },
+    { id: "28", artistName: "KATSEYE", votes: 0, genre: "Girl Group" },
+    { id: "29", artistName: "8TURN", votes: 0, genre: "Boy Group" },
   ];
 };
 

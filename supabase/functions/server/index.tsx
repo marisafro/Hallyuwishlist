@@ -82,6 +82,46 @@ app.get("/make-server-74a49e83/artist-wishes", async (c) => {
   }
 });
 
+// Add a new artist to the wishlist
+app.post("/make-server-74a49e83/add-artist", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { artistName, genre } = body;
+
+    if (!artistName || !genre) {
+      return c.json({ error: "Missing required fields: artistName, genre" }, 400);
+    }
+
+    // Check if artist already exists
+    const existingArtists = await kv.getByPrefix("artist:");
+    const artistExists = existingArtists.some((a: any) => a.artistName === artistName);
+
+    if (artistExists) {
+      console.log(`Artist already exists: ${artistName}`);
+      return c.json({ success: true, message: "Artist already exists", alreadyExists: true });
+    }
+
+    // Generate a unique ID (timestamp-based)
+    const id = `${Date.now()}`;
+
+    const newArtist = {
+      id,
+      artistName,
+      votes: 0,
+      genre,
+    };
+
+    await kv.set(`artist:${id}`, newArtist);
+
+    console.log(`New artist added: ${artistName} (${genre})`);
+
+    return c.json({ success: true, artist: newArtist });
+  } catch (error) {
+    console.log(`Error adding artist: ${error}`);
+    return c.json({ error: "Failed to add artist" }, 500);
+  }
+});
+
 // Check if user has voted for specific artists
 app.post("/make-server-74a49e83/check-artist-votes", async (c) => {
   try {
@@ -296,6 +336,46 @@ app.get("/make-server-74a49e83/events", async (c) => {
   }
 });
 
+// Add a new event
+app.post("/make-server-74a49e83/add-event", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { id, title, artist, date, venue, city, image, description, capacity, interestedCount } = body;
+
+    if (!id || !title || !artist) {
+      return c.json({ error: "Missing required fields: id, title, artist" }, 400);
+    }
+
+    // Check if event already exists
+    const existingEvent = await kv.get(`event:${id}`);
+    if (existingEvent) {
+      return c.json({ error: "Event already exists", event: existingEvent }, 200);
+    }
+
+    const newEvent = {
+      id,
+      title,
+      artist,
+      date,
+      venue,
+      city,
+      image,
+      description,
+      capacity,
+      interestedCount: interestedCount || 0,
+    };
+
+    await kv.set(`event:${id}`, newEvent);
+
+    console.log(`New event added: ${title}`);
+
+    return c.json({ success: true, event: newEvent });
+  } catch (error) {
+    console.log(`Error adding event: ${error}`);
+    return c.json({ error: "Failed to add event" }, 500);
+  }
+});
+
 // Update event interest count
 app.post("/make-server-74a49e83/event-interest", async (c) => {
   try {
@@ -336,6 +416,126 @@ app.post("/make-server-74a49e83/event-interest", async (c) => {
   }
 });
 
+// Sync missing events (adds new events from storage.ts without overwriting existing ones)
+app.post("/make-server-74a49e83/sync-events", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { events } = body;
+
+    if (!events || !Array.isArray(events)) {
+      return c.json({ error: "Missing or invalid events array" }, 400);
+    }
+
+    // Get existing events
+    const existingEvents = await kv.getByPrefix("event:");
+    const existingIds = new Set(existingEvents.map((e: any) => e.id));
+
+    let added = 0;
+    let skipped = 0;
+    const results: any[] = [];
+
+    for (const event of events) {
+      // Skip if event ID already exists
+      if (existingIds.has(event.id)) {
+        skipped++;
+        results.push({ event: event.title, status: 'skipped', reason: 'already exists' });
+        continue;
+      }
+
+      // Add new event
+      const newEvent = {
+        id: event.id,
+        title: event.title,
+        artist: event.artist,
+        date: event.date,
+        venue: event.venue,
+        city: event.city,
+        image: event.image,
+        description: event.description || "",
+        capacity: event.capacity,
+        interestedCount: 0,
+      };
+
+      await kv.set(`event:${event.id}`, newEvent);
+      added++;
+      results.push({ event: event.title, status: 'added' });
+      console.log(`Added event: ${event.title}`);
+    }
+
+    return c.json({
+      success: true,
+      added,
+      skipped,
+      total: events.length,
+      results,
+    });
+  } catch (error) {
+    console.log(`Error syncing events: ${error}`);
+    return c.json({ error: "Failed to sync events" }, 500);
+  }
+});
+
+// Sync missing artists (adds new artists from storage.ts without overwriting existing ones)
+app.post("/make-server-74a49e83/sync-artists", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { artists } = body; // Array of { id, artistName, genre }
+
+    if (!artists || !Array.isArray(artists)) {
+      return c.json({ error: "Missing or invalid artists array" }, 400);
+    }
+
+    // Get existing artists
+    const existingArtists = await kv.getByPrefix("artist:");
+    const existingNames = new Set(existingArtists.map((a: any) => a.artistName));
+    const existingIds = new Set(existingArtists.map((a: any) => a.id));
+
+    let added = 0;
+    let skipped = 0;
+    const results: any[] = [];
+
+    for (const artist of artists) {
+      // Skip if artist name already exists (duplicate check by name)
+      if (existingNames.has(artist.artistName)) {
+        skipped++;
+        results.push({ artist: artist.artistName, status: 'skipped', reason: 'already exists' });
+        continue;
+      }
+
+      // Skip if ID already exists (prevent ID collision)
+      if (existingIds.has(artist.id)) {
+        skipped++;
+        results.push({ artist: artist.artistName, status: 'skipped', reason: 'ID collision' });
+        continue;
+      }
+
+      // Add new artist (with votes: 0)
+      const newArtist = {
+        id: artist.id,
+        artistName: artist.artistName,
+        votes: 0,
+        genre: artist.genre || "K-pop",
+      };
+
+      await kv.set(`artist:${artist.id}`, newArtist);
+      added++;
+      results.push({ artist: artist.artistName, status: 'added' });
+      console.log(`Added artist: ${artist.artistName}`);
+    }
+
+    return c.json({
+      success: true,
+      added,
+      skipped,
+      total: artists.length,
+      results,
+    });
+  } catch (error) {
+    console.log(`Error syncing artists: ${error}`);
+    return c.json({ error: "Failed to sync artists" }, 500);
+  }
+});
+
 // Initialize default data (call this once to set up initial data)
 app.post("/make-server-74a49e83/initialize", async (c) => {
   try {
@@ -366,10 +566,23 @@ app.post("/make-server-74a49e83/initialize", async (c) => {
       { id: "23", artistName: "THE ROSE", votes: 0, genre: "Boy Group" },
       { id: "24", artistName: "I-DLE", votes: 0, genre: "Girl Group" },
       { id: "25", artistName: "TRENDZ", votes: 0, genre: "Boy Group" },
+      { id: "26", artistName: "YOUNGJI", votes: 0, genre: "Solo Artist", createdAt: 1777017600000 }, // April 27, 2026
+      { id: "27", artistName: "NMIXX", votes: 0, genre: "Girl Group", createdAt: 1777017600000 }, // April 27, 2026
+      { id: "28", artistName: "KATSEYE", votes: 0, genre: "Girl Group", createdAt: 1777017600000 }, // April 27, 2026
+      { id: "29", artistName: "8TURN", votes: 0, genre: "Boy Group", createdAt: 1777017600000}, // April 27, 2026
     ];
 
+    // SAFE MODE: Only add artists that don't exist (preserve existing votes)
+    const existingArtists = await kv.getByPrefix("artist:");
+    const existingIds = new Set(existingArtists.map((a: any) => a.id));
+
     for (const artist of defaultArtists) {
-      await kv.set(`artist:${artist.id}`, artist);
+      if (!existingIds.has(artist.id)) {
+        await kv.set(`artist:${artist.id}`, artist);
+        console.log(`Added new artist: ${artist.artistName}`);
+      } else {
+        console.log(`Skipped existing artist: ${artist.artistName}`);
+      }
     }
 
     // Initialize polls
@@ -394,8 +607,17 @@ app.post("/make-server-74a49e83/initialize", async (c) => {
       },
     ];
 
+    // SAFE MODE: Only add polls that don't exist (preserve existing votes)
+    const existingPolls = await kv.getByPrefix("poll:");
+    const existingPollIds = new Set(existingPolls.map((p: any) => p.id));
+
     for (const poll of defaultPolls) {
-      await kv.set(`poll:${poll.id}`, poll);
+      if (!existingPollIds.has(poll.id)) {
+        await kv.set(`poll:${poll.id}`, poll);
+        console.log(`Added new poll: ${poll.question}`);
+      } else {
+        console.log(`Skipped existing poll: ${poll.question}`);
+      }
     }
 
     // Initialize events
@@ -454,27 +676,40 @@ app.post("/make-server-74a49e83/initialize", async (c) => {
       },
     ];
 
+    // SAFE MODE: Only add events that don't exist (preserve existing interest counts)
+    const existingEvents = await kv.getByPrefix("event:");
+    const existingEventIds = new Set(existingEvents.map((e: any) => e.id));
+
     for (const event of defaultEvents) {
-      await kv.set(`event:${event.id}`, event);
+      if (!existingEventIds.has(event.id)) {
+        await kv.set(`event:${event.id}`, event);
+        console.log(`Added new event: ${event.title}`);
+      } else {
+        console.log(`Skipped existing event: ${event.title}`);
+      }
     }
 
-    return c.json({ success: true, message: "Default data initialized" });
+    return c.json({
+      success: true,
+      message: "Safe initialization complete - existing data preserved",
+      note: "Only missing artists/polls/events were added. All existing votes and data remain intact."
+    });
   } catch (error) {
     console.log(`Error initializing data: ${error}`);
     return c.json({ error: "Failed to initialize data" }, 500);
   }
 });
 
-// Archive and reset monthly data (call this at the start of each month)
-app.post("/make-server-74a49e83/monthly-reset", async (c) => {
+// Archive monthly data (NEVER resets - only creates backups for historical records)
+app.post("/make-server-74a49e83/monthly-archive", async (c) => {
   try {
     const now = Date.now();
     const archiveDate = new Date().toISOString().slice(0, 7); // Format: YYYY-MM
-    
+
     // Get all current interactions
     const interactions = await kv.getByPrefix("interaction:");
-    
-    // Archive interactions for the month
+
+    // Archive interactions for the month (BACKUP ONLY - no deletion)
     const archiveKey = `archive:${archiveDate}`;
     const archiveData = {
       timestamp: now,
@@ -483,13 +718,13 @@ app.post("/make-server-74a49e83/monthly-reset", async (c) => {
       totalCount: interactions.length,
     };
     await kv.set(archiveKey, archiveData);
-    
+
     // Get current state of artists, polls, and events for historical record
     const artists = await kv.getByPrefix("artist:");
     const polls = await kv.getByPrefix("poll:");
     const events = await kv.getByPrefix("event:");
-    
-    // Save monthly snapshot
+
+    // Save monthly snapshot (BACKUP ONLY - original data stays intact)
     const snapshotKey = `snapshot:${archiveDate}`;
     const snapshot = {
       timestamp: now,
@@ -501,26 +736,21 @@ app.post("/make-server-74a49e83/monthly-reset", async (c) => {
       totalInteractions: interactions.length,
     };
     await kv.set(snapshotKey, snapshot);
-    
-    // Note: We keep the interaction data for comparison between months
-    // If you want to delete old interactions older than 60 days, uncomment below:
-    // const sixtyDaysAgo = now - (60 * 24 * 60 * 60 * 1000);
-    // const oldInteractions = interactions.filter(i => i.timestamp < sixtyDaysAgo);
-    // for (const interaction of oldInteractions) {
-    //   const keys = await kv.getByPrefix(`interaction:${interaction.timestamp}`);
-    //   for (const key of keys) {
-    //     await kv.del(key);
-    //   }
-    // }
-    
-    return c.json({ 
-      success: true, 
-      message: "Monthly data archived successfully",
+
+    // IMPORTANT: We NEVER delete or reset any data
+    // All votes, interactions, and user data are preserved permanently
+    // Analytics will show cumulative data from the beginning
+
+    return c.json({
+      success: true,
+      message: "Monthly snapshot saved - all data preserved (nothing deleted)",
       archive: archiveDate,
       interactionsArchived: interactions.length,
+      totalVotesPreserved: snapshot.totalVotes,
+      note: "This endpoint only creates backups. No data was deleted or reset."
     });
   } catch (error) {
-    console.log(`Error during monthly reset: ${error}`);
+    console.log(`Error during monthly archive: ${error}`);
     return c.json({ error: "Failed to archive monthly data" }, 500);
   }
 });
@@ -530,11 +760,104 @@ app.get("/make-server-74a49e83/archives", async (c) => {
   try {
     const archives = await kv.getByPrefix("archive:");
     const snapshots = await kv.getByPrefix("snapshot:");
-    
+
     return c.json({ archives, snapshots });
   } catch (error) {
     console.log(`Error fetching archives: ${error}`);
     return c.json({ error: "Failed to fetch archives" }, 500);
+  }
+});
+
+// RESTORE DATA from backup JSON (recovers votes from interaction records)
+app.post("/make-server-74a49e83/restore-data", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { backupData } = body;
+
+    if (!backupData || !Array.isArray(backupData)) {
+      return c.json({ error: "Invalid backup data format" }, 400);
+    }
+
+    console.log(`Starting data restoration from ${backupData.length} records...`);
+
+    // Parse the backup data
+    const interactions: any[] = [];
+    const artists: any[] = [];
+    const polls: any[] = [];
+    const events: any[] = [];
+
+    for (const record of backupData) {
+      const parsedValue = JSON.parse(record.value);
+
+      if (record.key.startsWith("interaction:")) {
+        interactions.push(parsedValue);
+      } else if (record.key.startsWith("artist:")) {
+        artists.push(parsedValue);
+      } else if (record.key.startsWith("poll:")) {
+        polls.push(parsedValue);
+      } else if (record.key.startsWith("event:")) {
+        events.push(parsedValue);
+      }
+    }
+
+    console.log(`Parsed: ${interactions.length} interactions, ${artists.length} artists, ${polls.length} polls, ${events.length} events`);
+
+    // Count votes from interactions
+    const artistVoteCounts = new Map<string, number>();
+    for (const interaction of interactions) {
+      if (interaction.action === "wishlist" && interaction.artistId) {
+        const count = artistVoteCounts.get(interaction.artistId) || 0;
+        artistVoteCounts.set(interaction.artistId, count + 1);
+      }
+    }
+
+    console.log(`Vote tallies:`, Object.fromEntries(artistVoteCounts));
+
+    // Update artists with correct vote counts
+    let updatedCount = 0;
+    for (const artist of artists) {
+      const voteCount = artistVoteCounts.get(artist.id) || 0;
+      const updatedArtist = { ...artist, votes: voteCount };
+      await kv.set(`artist:${artist.id}`, updatedArtist);
+      console.log(`Restored ${artist.artistName}: ${voteCount} votes`);
+      updatedCount++;
+    }
+
+    // Restore interactions
+    let restoredInteractions = 0;
+    for (const interaction of interactions) {
+      const key = `interaction:${interaction.timestamp}:${interaction.userId}`;
+      await kv.set(key, interaction);
+      restoredInteractions++;
+    }
+
+    // Restore polls
+    for (const poll of polls) {
+      await kv.set(`poll:${poll.id}`, poll);
+    }
+
+    // Restore events
+    for (const event of events) {
+      await kv.set(`event:${event.id}`, event);
+    }
+
+    const totalVotes = Array.from(artistVoteCounts.values()).reduce((a, b) => a + b, 0);
+
+    return c.json({
+      success: true,
+      message: "Data successfully restored from backup",
+      restored: {
+        artists: updatedCount,
+        interactions: restoredInteractions,
+        polls: polls.length,
+        events: events.length,
+        totalVotes: totalVotes,
+      },
+      voteTallies: Object.fromEntries(artistVoteCounts),
+    });
+  } catch (error) {
+    console.log(`Error restoring data: ${error}`);
+    return c.json({ error: `Failed to restore data: ${error.message}` }, 500);
   }
 });
 
