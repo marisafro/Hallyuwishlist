@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
-import { Calendar, MapPin, Users, Search, Filter, PlayCircle, History } from "lucide-react";
+import { Calendar, MapPin, Users, Search, Filter, PlayCircle, History, Heart, CheckCircle } from "lucide-react";
 import { motion } from "motion/react";
 import { getEvents, type Event } from "../lib/storage";
 import { format } from "date-fns";
+import { addEventInterest } from "../lib/api";
+import { getUserIdentifier } from "../lib/fingerprint";
 
 interface PastConcert {
   id: string;
@@ -235,7 +237,45 @@ export const pastShows: PastShow[] = [
 export function Events() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCity, setFilterCity] = useState("all");
-  const allEvents = getEvents(); 
+  const [interestedEvents, setInterestedEvents] = useState<Set<string>>(new Set());
+  const allEvents = getEvents();
+
+  // Load interested events from localStorage on mount
+  useEffect(() => {
+    const loadInterested = async () => {
+      const userId = await getUserIdentifier();
+      const stored = localStorage.getItem(`interested_events_${userId}`);
+      if (stored) {
+        setInterestedEvents(new Set(JSON.parse(stored)));
+      }
+    };
+    loadInterested();
+  }, []);
+
+  const handleEventInterest = async (eventId: string) => {
+    const userId = await getUserIdentifier();
+
+    // Optimistic update
+    setInterestedEvents(prev => {
+      const newSet = new Set(prev);
+      newSet.add(eventId);
+      localStorage.setItem(`interested_events_${userId}`, JSON.stringify(Array.from(newSet)));
+      return newSet;
+    });
+
+    try {
+      await addEventInterest(eventId, userId);
+    } catch (error) {
+      console.error('Error adding event interest:', error);
+      // Revert on error
+      setInterestedEvents(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(eventId);
+        localStorage.setItem(`interested_events_${userId}`, JSON.stringify(Array.from(newSet)));
+        return newSet;
+      });
+    }
+  }; 
 
   // Combine all events for search and filtering
   const allPastConcerts = pastConcerts.map(e => ({ ...e, artist: e.title, venue: e.venue || "" }));
@@ -421,7 +461,13 @@ export function Events() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredEvents.map((event, index) => (
-              <EventCard key={event.id} event={event} index={index} />
+              <EventCard
+                key={event.id}
+                event={event}
+                index={index}
+                onInterest={handleEventInterest}
+                hasInterest={interestedEvents.has(event.id)}
+              />
             ))}
           </div>
         )}
@@ -490,7 +536,17 @@ export function Events() {
   );
 }
 
-function EventCard({ event, index }: { event: Event; index: number }) {
+function EventCard({
+  event,
+  index,
+  onInterest,
+  hasInterest,
+}: {
+  event: Event;
+  index: number;
+  onInterest: (eventId: string) => void;
+  hasInterest: boolean;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, rotateY: -15 }}
@@ -498,8 +554,8 @@ function EventCard({ event, index }: { event: Event; index: number }) {
       transition={{ duration: 0.6, delay: index * 0.08 }}
       whileHover={{ y: -10, scale: 1.02 }}
     >
-      <Link to={`/events/${event.id}`} className="group block">
-        <div className="bg-gradient-to-br from-blue-50 to-red-50 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all border border-blue-200 h-full flex flex-col">
+      <div className="bg-gradient-to-br from-blue-50 to-red-50 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all border border-blue-200 h-full flex flex-col">
+        <Link to={`/events/${event.id}`} className="group block">
           <div className="relative aspect-[16/9] overflow-hidden">
             <motion.img
               src={event.image}
@@ -514,13 +570,6 @@ function EventCard({ event, index }: { event: Event; index: number }) {
               whileHover={{ opacity: 1 }}
               className="absolute inset-0 bg-blue-600/20"
             />
-            {/*} <motion.div
-              className="absolute top-4 right-4 bg-gradient-to-r from-blue-600 to-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              {event.price}
-            </motion.div>*/}
             <div className="absolute bottom-4 left-4 right-4">
               <div className="text-white text-lg font-bold mb-1">{event.artist}</div>
               <div className="text-white/90 text-sm flex items-center gap-2">
@@ -542,19 +591,40 @@ function EventCard({ event, index }: { event: Event; index: number }) {
                 <MapPin className="size-4" />
                 {event.city}
               </div>
-              {/*} <div className="flex items-center gap-2">
-                <Users className="size-4" />
-                {event.interestedCount} interested
-              </div>*/}
-            </div>
-            <div className="mt-4 pt-4 border-t border-blue-100">
-              <span className="text-blue-600 font-semibold group-hover:underline">
-                View Details →
-              </span>
             </div>
           </div>
+        </Link>
+        <div className="px-6 pb-6">
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!hasInterest) {
+                onInterest(event.id);
+              }
+            }}
+            disabled={hasInterest}
+            whileHover={!hasInterest ? { scale: 1.02 } : {}}
+            whileTap={!hasInterest ? { scale: 0.98 } : {}}
+            className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm flex items-center justify-center gap-2 ${
+              hasInterest
+                ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-red-600 text-white hover:shadow-lg'
+            }`}
+          >
+            {hasInterest ? (
+              <>
+                <CheckCircle className="size-4" />
+                Interested
+              </>
+            ) : (
+              <>
+                <Heart className="size-4" />
+                I'm Interested
+              </>
+            )}
+          </motion.button>
         </div>
-      </Link>
+      </div>
     </motion.div>
   );
 }

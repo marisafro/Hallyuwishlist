@@ -214,10 +214,10 @@ export function Root() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-center md:text-left"
+              className="text-center md:text-left flex flex-col items-center md:items-start"
             >
               <h3 className="font-bold text-white mb-4 text-base">Quick Links</h3>
-              <ul className="space-y-2.5">
+              <ul className="space-y-2.5 flex flex-col items-center md:items-start">
                 <li>
                   <Link to="/events" className="text-sm text-blue-100/80 hover:text-white transition-colors inline-flex items-center gap-1 group">
                     <span className="group-hover:translate-x-1 transition-transform">Browse Events</span>

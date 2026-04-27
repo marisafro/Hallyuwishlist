@@ -405,10 +405,21 @@ app.post("/make-server-74a49e83/event-interest", async (c) => {
     // Update interest count
     event.interestedCount = (event.interestedCount || 0) + 1;
     await kv.set(eventKey, event);
-    
+
     // Mark user as interested
-    await kv.set(interestKey, { userId, eventId, timestamp: Date.now() });
-    
+    const timestamp = Date.now();
+    await kv.set(interestKey, { userId, eventId, timestamp });
+
+    // Track interaction for KPI analytics
+    const interactionKey = `interaction:${timestamp}:${userId}`;
+    const interaction = {
+      eventId,
+      action: 'interested',
+      timestamp,
+      userId,
+    };
+    await kv.set(interactionKey, interaction);
+
     return c.json({ success: true, event });
   } catch (error) {
     console.log(`Error updating event interest: ${error}`);
