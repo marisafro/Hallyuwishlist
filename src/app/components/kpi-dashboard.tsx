@@ -123,8 +123,10 @@ export function KPIDashboard() {
         return 'New';
       }
       const change = ((current - previous) / previous) * 100;
-      const sign = change >= 0 ? '+' : '';
-      return `${sign}${Math.round(change)}%`;
+      // Cap percentage at 100% max
+      const cappedChange = Math.min(Math.abs(change), 100);
+      const sign = change >= 0 ? '+' : '-';
+      return `${sign}${Math.round(cappedChange)}%`;
     };
 
     const percentageChanges = {
@@ -145,7 +147,7 @@ export function KPIDashboard() {
       name: e.artist,
       interested: e.interestedCount || 0,
       capacity: e.capacity || 1000,
-      fillRate: ((e.interestedCount || 0) / (e.capacity || 1000)) * 100,
+      fillRate: Math.min(((e.interestedCount || 0) / (e.capacity || 1000)) * 100, 100),
     }));
 
     // Genre distribution
@@ -172,11 +174,12 @@ export function KPIDashboard() {
         options: (poll.options || []).map(opt => ({
           text: opt.text,
           votes: opt.votes || 0,
-          percentage: totalVotes > 0 ? ((opt.votes || 0) / totalVotes) * 100 : 0,
+          percentage: totalVotes > 0 ? Math.min(((opt.votes || 0) / totalVotes) * 100, 100) : 0,
         })),
       };
     });
 
+  
     // City distribution
     const cityData = [
       { name: 'Athens', interest: events.filter(e => e.city === 'Athens').reduce((s, e) => s + (e.interestedCount || 0), 0) },
@@ -201,7 +204,7 @@ export function KPIDashboard() {
     };
   }, [artistWishes, events, polls, interactions]);
 
-  const metrics = [
+ const metrics = [
     {
       label: 'Total Engagements',
       value: kpis.totalEngagements,
@@ -415,7 +418,7 @@ export function KPIDashboard() {
         {/* Charts Section - Always renders, blur overlay protects privacy */}
         <div className="relative">
           {/* Permanent Blur Overlay - Comment out this section to reveal data */}
-          {/* START BLUR OVERLAY - Remove or comment out to show analytics */}
+          {/* START BLUR OVERLAY - Remove or comment out to show analytics 
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -682,7 +685,7 @@ export function KPIDashboard() {
                           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-purple-600 to-pink-600"
-                              style={{ width: `${option.percentage}%` }}
+                              style={{ width: `${Math.min(option.percentage, 100)}%` }}
                             />
                           </div>
                         </div>
