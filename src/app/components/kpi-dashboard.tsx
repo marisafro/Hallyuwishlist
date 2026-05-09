@@ -418,7 +418,7 @@ export function KPIDashboard() {
         {/* Charts Section - Always renders, blur overlay protects privacy */}
         <div className="relative">
           {/* Permanent Blur Overlay - Comment out this section to reveal data */}
-          {/* START BLUR OVERLAY - Remove or comment out to show analytics 
+          {/* START BLUR OVERLAY - Remove or comment out to show analytics */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

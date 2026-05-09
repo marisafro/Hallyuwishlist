@@ -214,7 +214,8 @@ export function Root() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-center md:text-left flex flex-col items-center md:items-start"
+              className="text-right md:text-right flex flex-col items-right md:items-start opacity:1 transform:none "
+              //style={{opacity: 1,transform: "none",paddingLeft: "30px",}}
             >
               <h3 className="font-bold text-white mb-4 text-base">Quick Links</h3>
               <ul className="space-y-2.5 flex flex-col items-center md:items-start">
