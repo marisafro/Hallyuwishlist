@@ -95,7 +95,7 @@ export const upcomingEvents: Event[] = [
     date: "2026-06-27",
     venue: "WE",
     city: "Thessaloniki",
-    image: "https://iili.io/q48Xv1a.md.png",
+    image: "https://iili.io/Bp9TrVn.md.png",
     description: "",
     capacity: "apx. 1000",
     interestedCount: 0,
@@ -113,18 +113,7 @@ export const upcomingEvents: Event[] = [
     capacity: "TBA",
     interestedCount: 0,
   },
-  {
-    id: "3",
-    title: "KONFECTIONERY DANCE CAMP 2026 - Athens ",
-    artist: "KONFECTIONERY DANCE CAMP",
-    date: "2026-05-02",
-    venue: "Αμαξοστάσιο ΟΣΥ - Πλατεία Αττικής",
-    city: "Athens",
-    image: "https://iili.io/BP8gNz7.md.png",
-    description: "",
-    capacity: "TBA",
-    interestedCount: 0,
-  },
+  
 ];
 
 // Initialize events in localStorage if not present

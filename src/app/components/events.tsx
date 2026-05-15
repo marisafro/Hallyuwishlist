@@ -155,6 +155,18 @@ export const pastConcerts: PastConcert[] = [
 export const pastEvents: PastEvent[] = [
 
   {
+    id: "3",
+    title: "KONFECTIONERY DANCE CAMP 2026 - Athens ",
+    artist: "KONFECTIONERY DANCE CAMP",
+    date: "2026-05-02",
+    venue: "Αμαξοστάσιο ΟΣΥ - Πλατεία Αττικής",
+    city: "Athens",
+    image: "https://iili.io/BP8gNz7.md.png",
+    description: "",
+    capacity: "apx. 150",
+    type:"event",
+  },
+  {
     id: "paste-4",
     title: "Choom KPOP FESTIVAL - Thessaloniki",
     artist: "Choom KPOP FESTIVAL",
