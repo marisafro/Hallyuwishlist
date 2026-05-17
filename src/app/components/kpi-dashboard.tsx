@@ -94,47 +94,6 @@ export function KPIDashboard() {
     // Total engagements = all votes and interactions combined
     const totalEngagements = totalInteractions + totalArtistVotes + totalInterested + totalPollVotes;
 
-    // Calculate percentage changes based on time periods (monthly comparison)
-    const now = Date.now();
-    const oneMonthAgo = now - (30 * 24 * 60 * 60 * 1000); // Last 30 days
-    const twoMonthsAgo = now - (60 * 24 * 60 * 60 * 1000); // 30-60 days ago
-
-    // Split interactions by time period (for trend calculation)
-    const lastMonthInteractions = interactions.filter((i: any) => i.timestamp >= oneMonthAgo);
-    const previousMonthInteractions = interactions.filter((i: any) => i.timestamp >= twoMonthsAgo && i.timestamp < oneMonthAgo);
-
-    // Calculate metrics for each period
-    const calculateMetrics = (interactionList: any[]) => ({
-      totalEngagements: interactionList.length,
-      eventInterest: interactionList.filter((i: any) => i.action === 'interested').length,
-      artistVotes: interactionList.filter((i: any) => i.action === 'wishlist').length,
-      pollResponses: interactionList.filter((i: any) => i.action === 'vote').length,
-    });
-
-    const lastMonthMetrics = calculateMetrics(lastMonthInteractions);
-    const previousMonthMetrics = calculateMetrics(previousMonthInteractions);
-
-    // Calculate percentage changes - if no historical data, show "New" badge
-    const calculateChange = (current: number, previous: number): string => {
-      if (previous === 0 && current === 0) {
-        return 'New';
-      }
-      if (previous === 0) {
-        return 'New';
-      }
-      const change = ((current - previous) / previous) * 100;
-      // Cap percentage at 100% max
-      const cappedChange = Math.min(Math.abs(change), 100);
-      const sign = change >= 0 ? '+' : '-';
-      return `${sign}${Math.round(cappedChange)}%`;
-    };
-
-    const percentageChanges = {
-      totalEngagements: calculateChange(totalEngagements, previousMonthMetrics.totalEngagements || 0),
-      eventInterest: calculateChange(totalInterested, previousMonthMetrics.eventInterest || 0),
-      artistVotes: calculateChange(totalArtistVotes, previousMonthMetrics.artistVotes || 0),
-      pollResponses: calculateChange(totalPollVotes, previousMonthMetrics.pollResponses || 0),
-    };
 
     // Top artists
     const topArtists = [...artistWishes]
@@ -194,7 +153,6 @@ export function KPIDashboard() {
       totalInterested,
       totalArtistVotes,
       totalPollVotes,
-      percentageChanges,
       topArtists,
       eventsInterest,
       genreData,
@@ -210,28 +168,24 @@ export function KPIDashboard() {
       value: kpis.totalEngagements,
       icon: TrendingUp,
       color: 'purple',
-      change: kpis.percentageChanges.totalEngagements,
     },
     {
       label: 'Event Interest',
       value: kpis.totalInterested,
       icon: Calendar,
       color: 'pink',
-      change: kpis.percentageChanges.eventInterest,
     },
     {
       label: 'Artist Votes',
       value: kpis.totalArtistVotes,
       icon: Heart,
       color: 'blue',
-      change: kpis.percentageChanges.artistVotes,
     },
     {
       label: 'Poll Responses',
       value: kpis.totalPollVotes,
       icon: Users,
       color: 'indigo',
-      change: kpis.percentageChanges.pollResponses,
     },
   ];
 
@@ -356,41 +310,32 @@ export function KPIDashboard() {
             }`}
           >
             <RefreshCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh Monthly Data'}</span>
+            <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh Data'}</span>
             <span className="sm:hidden">{isRefreshing ? '...' : 'Refresh'}</span>
           </motion.button>
         </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {metrics.map((metric, index) => {
-            const isPositive = metric.change.startsWith('+');
-            const isNegative = metric.change.startsWith('-');
-            const changeColor = isPositive ? 'green' : isNegative ? 'red' : 'gray';
-            
-            return (
-              <motion.div
-                key={metric.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-6 shadow-lg border border-blue-100"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br from-${metric.color}-100 to-${metric.color}-200`}>
-                    <metric.icon className={`size-6 text-${metric.color}-600`} />
-                  </div>
-                  <span className={`text-sm font-semibold text-${changeColor}-600 bg-${changeColor}-50 px-2 py-1 rounded-full`}>
-                    {metric.change}
-                  </span>
+          {metrics.map((metric, index) => (
+            <motion.div
+              key={metric.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="bg-white rounded-2xl p-6 shadow-lg border border-blue-100"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-xl bg-gradient-to-br from-${metric.color}-100 to-${metric.color}-200`}>
+                  <metric.icon className={`size-6 text-${metric.color}-600`} />
                 </div>
-                <div className="text-3xl font-bold text-gray-900 mb-1">
-                  {metric.value.toLocaleString()}
-                </div>
-                <div className="text-sm text-gray-600">{metric.label}</div>
-              </motion.div>
-            );
-          })}
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">
+                {metric.value.toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-600">{metric.label}</div>
+            </motion.div>
+          ))}
         </div>
 
         {/* Tabs */}
