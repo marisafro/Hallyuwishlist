@@ -154,8 +154,21 @@ export const pastConcerts: PastConcert[] = [
 {/*Past Event Details*/}
 export const pastEvents: PastEvent[] = [
 
+    {
+    id: "paste-6",
+    title: "LEVEL10KCONVENTION 2026 Thessaloniki",
+    artist: "LEVEL10KCONVENTION",
+    date: "2026-06-27",
+    venue: "WE",
+    city: "Thessaloniki",
+    image: "https://iili.io/Bp9TrVn.md.png",
+    description: "",
+    capacity: "apx. 1000",
+    type:"event",
+  },
+  
   {
-    id: "3",
+    id: "paste-5",
     title: "KONFECTIONERY DANCE CAMP 2026 - Athens ",
     artist: "KONFECTIONERY DANCE CAMP",
     date: "2026-05-02",

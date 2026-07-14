@@ -88,19 +88,20 @@ export interface UserInteraction {
 // 🎯 ADMIN: Add new events here - they will auto-sync to Supabase on app load
 export const upcomingEvents: Event[] = [
   
-  {
+
+   {
     id: "1",
-    title: "LEVEL10KCONVENTION 2026 Thessaloniki",
-    artist: "LEVEL10KCONVENTION",
-    date: "2026-06-27",
-    venue: "WE",
-    city: "Thessaloniki",
-    image: "https://iili.io/Bp9TrVn.md.png",
+    title: "KARD - NOW HERE Tour (2026)",
+    artist: "KARD",
+    date: "2026-09-17",
+    venue: "UNIVERSE MULTIVENUE",
+    city: "Athens",
+    image: "https://iili.io/CGYh1pt.md.jpg",
     description: "",
-    capacity: "apx. 1000",
+    capacity: "apx. 2000",
     interestedCount: 0,
   },
-  
+      
   {
     id: "2",
     title: "LEVEL10KCONVENTION 2026 - Athens ",
