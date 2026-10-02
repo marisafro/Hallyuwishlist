@@ -48,7 +48,20 @@ interface PastEvent {
 export const pastConcerts: PastConcert[] = [
   
  {
-    id: "pastc-5",
+    id: "pastc-10",
+    title: "KARD - NOW HERE Tour (2026)",
+    artist: "KARD",
+    date: "2026-09-17",
+    venue: "UNIVERSE MULTIVENUE",
+    city: "Athens",
+    image: "https://iili.io/CGYh1pt.md.jpg",
+    description: "",
+    capacity: "apx. 2000",
+    type: "concert",
+  },
+  
+  {
+    id: "pastc-9",
     title: "TRENDZ - [ON THE MOVE] Tour (2026)",
     artist: "TRENDZ",
     date: "2026-04-08",

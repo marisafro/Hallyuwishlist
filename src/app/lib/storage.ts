@@ -89,25 +89,25 @@ export interface UserInteraction {
 export const upcomingEvents: Event[] = [
   
 
-   {
+   
+  {
     id: "1",
-    title: "KARD - NOW HERE Tour (2026)",
-    artist: "KARD",
-    date: "2026-09-17",
-    venue: "UNIVERSE MULTIVENUE",
+    title: "TRENDZ - [ON MY KNEES] TOUR (2026)",
+    artist: "TRENDZ",
+    date: "2026-10-18",
+    venue: "Arch Club",
     city: "Athens",
-    image: "https://iili.io/CGYh1pt.md.jpg",
+    image: "https://www.more.com/getattachment/dfcabf83-5adc-4600-a05c-ef0cc2b7e6ca/TRENDZ-in-Athens----On-My-Knees--TOUR-IN-EURO91054.png",
     description: "",
-    capacity: "apx. 2000",
+    capacity: "apx.1000",
     interestedCount: 0,
   },
-      
   {
     id: "2",
     title: "LEVEL10KCONVENTION 2026 - Athens ",
     artist: "LEVEL10KCONVENTION",
-    date: "2026-08-10",
-    venue: "TBA",
+    date: "2026-08-12",
+    venue: "The CORE Sport Center",
     city: "Athens",
     image: "https://iili.io/q4UTnzQ.png",
     description: "",
@@ -210,6 +210,7 @@ export const getArtistWishes = (): ArtistWish[] => {
     { id: "27", artistName: "NMIXX", votes: 0, genre: "Girl Group" },
     { id: "28", artistName: "KATSEYE", votes: 0, genre: "Girl Group" },
     { id: "29", artistName: "8TURN", votes: 0, genre: "Boy Group" },
+    { id: "30", artistName: "ZELO", votes: 0, genre: "Solo Artist" },
   ];
 };
 
