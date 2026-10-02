@@ -211,6 +211,8 @@ export const getArtistWishes = (): ArtistWish[] => {
     { id: "28", artistName: "KATSEYE", votes: 0, genre: "Girl Group" },
     { id: "29", artistName: "8TURN", votes: 0, genre: "Boy Group" },
     { id: "30", artistName: "ZELO", votes: 0, genre: "Solo Artist" },
+    { id: "31", artistName: "JEON SOMI", votes: 0, genre: "Solo Artist" },
+    { id: "32", artistName: "TAEMIN", votes: 0, genre: "Solo Artist" },
   ];
 };
 
