@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Heart, Vote, CheckCircle, TrendingUp, Sparkles, Loader2, Star } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Heart, Vote, CheckCircle, TrendingUp, Sparkles, Loader2, Star, RefreshCw } from "lucide-react";
 import { motion } from "motion/react";
 import {
   fetchArtistWishes,
@@ -23,11 +23,51 @@ export function FanTools() {
   const [showAgeGroupModal, setShowAgeGroupModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<{type: 'artist' | 'poll', id: string, optionId?: string} | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshingArtists, setRefreshingArtists] = useState(false);
+  const votedArtistsRef = useRef<Set<string>>(new Set());
+
+  // Keep ref in sync with state so the interval closure always has current voted set
+  useEffect(() => {
+    votedArtistsRef.current = votedArtists;
+  }, [votedArtists]);
+
+  // Refresh only the artist list from Supabase, preserving existing vote state
+  const refreshArtists = useCallback(async (silent = true) => {
+    if (!silent) setRefreshingArtists(true);
+    try {
+      const artists = await fetchArtistWishes();
+      setArtistWishes(artists);
+
+      // Check votes for any artists that haven't been checked yet
+      const userId = await getUserIdentifier();
+      const newArtistIds = artists
+        .map((a: ArtistWish) => a.id)
+        .filter((id: string) => !votedArtistsRef.current.has(id));
+
+      if (newArtistIds.length > 0) {
+        const votedObj = await checkArtistVotes(userId, newArtistIds);
+        const newVoted = Object.keys(votedObj).filter(id => votedObj[id]);
+        if (newVoted.length > 0) {
+          setVotedArtists(prev => new Set([...prev, ...newVoted]));
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing artists:', error);
+    } finally {
+      if (!silent) setRefreshingArtists(false);
+    }
+  }, []);
 
   // Load data from Supabase on mount
   useEffect(() => {
     loadData();
   }, []);
+
+  // Auto-refresh artist list every 60 seconds to pick up new entries added in Supabase
+  useEffect(() => {
+    const interval = setInterval(() => refreshArtists(true), 60_000);
+    return () => clearInterval(interval);
+  }, [refreshArtists]);
 
   const loadData = async () => {
     setLoading(true);
@@ -274,6 +314,17 @@ export function FanTools() {
                     </h2>
                     <p className="text-gray-700">Vote for artists you want to see perform in Greece</p>
                   </div>
+                  <motion.button
+                    onClick={() => refreshArtists(false)}
+                    disabled={refreshingArtists}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Check for new artists"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-blue-600 border border-blue-200 bg-white hover:bg-blue-50 transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={`size-4 ${refreshingArtists ? 'animate-spin' : ''}`} />
+                    <span className="hidden sm:inline">{refreshingArtists ? 'Refreshing…' : 'Refresh'}</span>
+                  </motion.button>
                 </div>
 
                 {/* Boy Groups */}

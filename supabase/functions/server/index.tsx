@@ -71,11 +71,51 @@ app.post("/make-server-74a49e83/interactions", async (c) => {
   }
 });
 
-// Get all artist wishes
+// Get all artist wishes — merges KV store with kpop_artist_wishes Supabase table
 app.get("/make-server-74a49e83/artist-wishes", async (c) => {
   try {
-    const wishes = await kv.getByPrefix("artist:");
-    return c.json({ wishes });
+    const kvWishes: any[] = await kv.getByPrefix("artist:");
+
+    // Also read from the kpop_artist_wishes table so any row added there is picked up automatically
+    let tableArtists: any[] = [];
+    try {
+      const { createClient } = await import("jsr:@supabase/supabase-js@2.49.8");
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL"),
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+      );
+      const { data, error } = await supabase.from("kpop_artist_wishes").select("*");
+      if (!error && data) {
+        tableArtists = data;
+      }
+    } catch (tableError) {
+      // Table may not exist — silently skip
+      console.log("kpop_artist_wishes table read skipped:", tableError);
+    }
+
+    // Build a set of IDs already in KV so we can detect new table rows
+    const kvIds = new Set(kvWishes.map((a: any) => String(a.id)));
+
+    // Sync new table rows into KV (so votes + vote-dedup work correctly)
+    for (const row of tableArtists) {
+      const rowId = String(row.id);
+      if (!kvIds.has(rowId)) {
+        const newArtist = {
+          id: rowId,
+          artistName: row.artistName ?? row.artist_name ?? row.name ?? `Artist ${rowId}`,
+          votes: row.votes ?? 0,
+          genre: row.genre ?? "Boy Group",
+          createdAt: row.createdAt ?? row.created_at
+            ? new Date(row.createdAt ?? row.created_at).getTime()
+            : Date.now(),
+        };
+        await kv.set(`artist:${rowId}`, newArtist);
+        kvWishes.push(newArtist);
+        console.log(`Auto-synced artist ${newArtist.artistName} (id ${rowId}) from kpop_artist_wishes table`);
+      }
+    }
+
+    return c.json({ wishes: kvWishes });
   } catch (error) {
     console.log(`Error fetching artist wishes: ${error}`);
     return c.json({ error: "Failed to fetch artist wishes" }, 500);
