@@ -178,42 +178,44 @@ export const updateEvent = (event: Event) => {
 // Artist wishlist
 // 🎯 ADMIN: Add new artists here - they will auto-sync to Supabase on app load
 // Format: { id: "##", artistName: "NAME", votes: 0, genre: "Boy Group|Girl Group|Solo Artist|Co-ed Group" }
+export const ARTIST_LIST: ArtistWish[] = [
+  { id: "1", artistName: "SEVENTEEN", votes: 0, genre: "Boy Group" },
+  { id: "2", artistName: "TXT (Tomorrow X Together)", votes: 0, genre: "Boy Group" },
+  { id: "3", artistName: "IVE", votes: 0, genre: "Girl Group" },
+  { id: "4", artistName: "ATEEZ", votes: 0, genre: "Boy Group" },
+  { id: "5", artistName: "TWICE", votes: 0, genre: "Girl Group" },
+  { id: "6", artistName: "BTS", votes: 0, genre: "Boy Group" },
+  { id: "7", artistName: "LE SSERAFIM", votes: 0, genre: "Girl Group" },
+  { id: "8", artistName: "EXO", votes: 0, genre: "Boy Group" },
+  { id: "9", artistName: "STRAY KIDS", votes: 0, genre: "Boy Group" },
+  { id: "10", artistName: "aespa", votes: 0, genre: "Girl Group" },
+  { id: "11", artistName: "HEARTS2HEARTS", votes: 0, genre: "Girl Group" },
+  { id: "12", artistName: "ILLIT", votes: 0, genre: "Girl Group" },
+  { id: "13", artistName: "P1HARMONY", votes: 0, genre: "Boy Group" },
+  { id: "14", artistName: "DREAMCATCHER", votes: 0, genre: "Girl Group" },
+  { id: "15", artistName: "CIX", votes: 0, genre: "Boy Group" },
+  { id: "16", artistName: "BTOB", votes: 0, genre: "Boy Group" },
+  { id: "17", artistName: "DAY6", votes: 0, genre: "Boy Group" },
+  { id: "18", artistName: "JUNNY", votes: 0, genre: "Solo Artist" },
+  { id: "19", artistName: "KARD", votes: 0, genre: "Co-ed Group" },
+  { id: "20", artistName: "BAEKHYUN", votes: 0, genre: "Solo Artist" },
+  { id: "21", artistName: "CHUNGHA", votes: 0, genre: "Solo Artist" },
+  { id: "22", artistName: "WOODZ", votes: 0, genre: "Solo Artist" },
+  { id: "23", artistName: "THE ROSE", votes: 0, genre: "Boy Group" },
+  { id: "24", artistName: "I-DLE", votes: 0, genre: "Girl Group" },
+  { id: "25", artistName: "TRENDZ", votes: 0, genre: "Boy Group" },
+  { id: "26", artistName: "YOUNGJI", votes: 0, genre: "Solo Artist" },
+  { id: "27", artistName: "NMIXX", votes: 0, genre: "Girl Group" },
+  { id: "28", artistName: "KATSEYE", votes: 0, genre: "Girl Group" },
+  { id: "29", artistName: "8TURN", votes: 0, genre: "Boy Group" },
+  { id: "30", artistName: "ZELO", votes: 0, genre: "Solo Artist" },
+  { id: "31", artistName: "JEON SOMI", votes: 0, genre: "Solo Artist" },
+  { id: "32", artistName: "TAEMIN", votes: 0, genre: "Solo Artist" },
+];
+
 export const getArtistWishes = (): ArtistWish[] => {
   const stored = localStorage.getItem('kpop_artist_wishes');
-  return stored ? JSON.parse(stored) : [
-    { id: "1", artistName: "SEVENTEEN", votes: 0, genre: "Boy Group" },
-    { id: "2", artistName: "TXT (Tomorrow X Together)", votes: 0, genre: "Boy Group" },
-    { id: "3", artistName: "IVE", votes: 0, genre: "Girl Group" },
-    { id: "4", artistName: "ATEEZ", votes: 0, genre: "Boy Group" },
-    { id: "5", artistName: "TWICE", votes: 0, genre: "Girl Group" },
-    { id: "6", artistName: "BTS", votes: 0, genre: "Boy Group" },
-    { id: "7", artistName: "LE SSERAFIM", votes: 0, genre: "Girl Group" },
-    { id: "8", artistName: "EXO", votes: 0, genre: "Boy Group" },
-    { id: "9", artistName: "STRAY KIDS", votes: 0, genre: "Boy Group" },
-    { id: "10", artistName: "aespa", votes: 0, genre: "Girl Group" },
-    { id: "11", artistName: "HEARTS2HEARTS", votes: 0, genre: "Girl Group" },
-    { id: "12", artistName: "ILLIT", votes: 0, genre: "Girl Group" },
-    { id: "13", artistName: "P1HARMONY", votes: 0, genre: "Boy Group" },
-    { id: "14", artistName: "DREAMCATCHER", votes: 0, genre: "Girl Group" },
-    { id: "15", artistName: "CIX", votes: 0, genre: "Boy Group" },
-    { id: "16", artistName: "BTOB", votes: 0, genre: "Boy Group" },
-    { id: "17", artistName: "DAY6", votes: 0, genre: "Boy Group" },
-    { id: "18", artistName: "JUNNY", votes: 0, genre: "Solo Artist" },
-    { id: "19", artistName: "KARD", votes: 0, genre: "Co-ed Group" },
-    { id: "20", artistName: "BAEKHYUN", votes: 0, genre: "Solo Artist" },
-    { id: "21", artistName: "CHUNGHA", votes: 0, genre: "Solo Artist" },
-    { id: "22", artistName: "WOODZ", votes: 0, genre: "Solo Artist" },
-    { id: "23", artistName: "THE ROSE", votes: 0, genre: "Boy Group" },
-    { id: "24", artistName: "I-DLE", votes: 0, genre: "Girl Group" },
-    { id: "25", artistName: "TRENDZ", votes: 0, genre: "Boy Group" },
-    { id: "26", artistName: "YOUNGJI", votes: 0, genre: "Solo Artist" },
-    { id: "27", artistName: "NMIXX", votes: 0, genre: "Girl Group" },
-    { id: "28", artistName: "KATSEYE", votes: 0, genre: "Girl Group" },
-    { id: "29", artistName: "8TURN", votes: 0, genre: "Boy Group" },
-    { id: "30", artistName: "ZELO", votes: 0, genre: "Solo Artist" },
-    { id: "31", artistName: "JEON SOMI", votes: 0, genre: "Solo Artist" },
-    { id: "32", artistName: "TAEMIN", votes: 0, genre: "Solo Artist" },
-  ];
+  return stored ? JSON.parse(stored) : ARTIST_LIST;
 };
 
 export const addArtistVote = async (artistId: string) => {

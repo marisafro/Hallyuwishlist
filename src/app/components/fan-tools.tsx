@@ -9,9 +9,11 @@ import {
   trackInteraction,
   checkArtistVotes,
   checkPollVotes,
+  syncArtistsFromStorage,
   type ArtistWish,
   type Poll,
 } from "../lib/api";
+import { ARTIST_LIST } from "../lib/storage";
 import { getUserIdentifier, getUserAgeGroup, setUserAgeGroup } from "../lib/fingerprint";
 import { AgeGroupModal } from "./age-group-modal";
 
@@ -72,6 +74,10 @@ export function FanTools() {
   const loadData = async () => {
     setLoading(true);
     try {
+      // Push any artists in storage.ts that aren't in Supabase yet.
+      // The server skips IDs that already exist, so votes are never touched.
+      await syncArtistsFromStorage(ARTIST_LIST);
+
       const [artists, pollsData] = await Promise.all([
         fetchArtistWishes(),
         fetchPolls(),

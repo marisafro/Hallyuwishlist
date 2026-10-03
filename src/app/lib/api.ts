@@ -125,6 +125,22 @@ export async function voteForArtist(artistId: string, userId: string, ageGroup?:
   }
 }
 
+// Syncs the local ARTIST_LIST from storage.ts to Supabase KV.
+// The server only adds entries that don't exist yet — existing votes are never touched.
+export async function syncArtistsFromStorage(artists: Array<{ id: string; artistName: string; genre: string }>) {
+  try {
+    const response = await fetch(`${API_BASE}/sync-artists`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ artists }),
+    });
+    if (!response.ok) throw new Error('Failed to sync artists');
+    return await response.json();
+  } catch (error) {
+    console.error('Error syncing artists:', error);
+  }
+}
+
 export async function addArtist(artistName: string, genre: string) {
   try {
     const response = await fetch(`${API_BASE}/add-artist`, {
